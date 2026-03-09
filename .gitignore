@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Data & Models
+input-data/*/*.csv
+!input-data/.gitkeep
+models/*/
+!models/.gitkeep
+*.pkl
+*.h5
+*.pt
+*.onnx
+
+# Logs & Outputs
+logs/*
+!logs/.gitkeep
+output-data/*
+!output-data/.gitkeep
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
