@@ -36,15 +36,20 @@ ENV/
 # Jupyter Notebook
 .ipynb_checkpoints
 
-# Data files (generated)
+# Data files (generated) - EXCLUDE ALL LARGE FILES
 data/processed/*.csv
 data/embeddings/*.npy
 data/embeddings/*.pkl
 data/final/
+data/final/**/*.npy
+data/final/**/*.pkl
 
-# Logs
+# Logs - Keep metrics and visualizations, ignore debug logs
 logs/*.log
-logs/*.json
+logs/debug.log
+logs/verbose.log
+!logs/p3.*_metrics.json
+!logs/*.png
 
 # OS
 .DS_Store
@@ -66,13 +71,28 @@ input-data/raw/
 input-data/router/
 input-data/splits/
 
-# Phase 3: Vector Database (large binary files)
-data/vector_db/*.faiss
-data/vector_db/**/*.faiss
-data/vector_db/index.bin
+# Phase 3: Vector Database (large binary files) - COMPREHENSIVE
+data/vector_db/
+data/**/vector_db/
+**/faiss_index_*/
+*.faiss
+*.faiss.index
 
-# Keep metrics and visualizations, ignore only debug logs
-!logs/p3.*_metrics.json
-!logs/*.png
-logs/debug.log
-logs/verbose.log
+# Pickle files (except specific ones)
+data/**/*.pkl
+!data/final/vectorizer.pkl
+!data/final/all_index_maps.pkl
+
+# Large numpy arrays
+data/**/*.npy
+data/**/*.npz
+
+# JSON metadata (keep small ones, ignore large)
+data/vector_db/**/*.json
+!data/final/**/*.json
+
+# Temporary and cache files
+*.tmp
+*.cache
+.cache/
+tmp/
