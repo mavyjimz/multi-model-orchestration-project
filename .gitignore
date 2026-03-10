@@ -4,36 +4,64 @@ __pycache__/
 *$py.class
 *.so
 .Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
 venv/
 env/
 ENV/
-
-# Data & Models
-input-data/*/*.csv
-!input-data/.gitkeep
-models/*/
-!models/.gitkeep
-*.pkl
-*.h5
-*.pt
-*.onnx
-
-# Logs & Outputs
-logs/*
-!logs/.gitkeep
-output-data/*
-!output-data/.gitkeep
-
-# Environment
-.env
-.env.local
+.venv
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Data files (generated)
+data/processed/*.csv
+data/embeddings/*.npy
+data/embeddings/*.pkl
+data/final/
+
+# Logs
+logs/*.log
+logs/*.json
 
 # OS
 .DS_Store
 Thumbs.db
+
+# Environment variables
+.env
+.env.local
+
+# Model checkpoints (if any)
+*.h5
+*.pth
+*.pt
+*.onnx
+
+# Input data (raw/intermediate files)
+input-data/processed/
+input-data/raw/
+input-data/router/
+input-data/splits/
