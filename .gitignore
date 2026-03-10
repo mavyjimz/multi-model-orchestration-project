@@ -65,3 +65,8 @@ input-data/processed/
 input-data/raw/
 input-data/router/
 input-data/splits/
+
+# Phase 3: Vector Database (large binary files)
+data/vector_db/*.faiss
+data/vector_db/**/*.faiss
+data/vector_db/index.bin
