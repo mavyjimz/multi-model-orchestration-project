@@ -70,3 +70,9 @@ input-data/splits/
 data/vector_db/*.faiss
 data/vector_db/**/*.faiss
 data/vector_db/index.bin
+
+# Keep metrics and visualizations, ignore only debug logs
+!logs/p3.*_metrics.json
+!logs/*.png
+logs/debug.log
+logs/verbose.log
