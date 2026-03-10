@@ -1,0 +1,32 @@
+{
+  "version": "1.0",
+  "created_at": "2026-03-10T16:46:10.423814",
+  "index_type": "flat",
+  "embedding_dimension": 5000,
+  "total_vectors": 4774,
+  "dataset_splits": {
+    "train": 3341,
+    "val": 716,
+    "test": 717
+  },
+  "index_maps": {
+    "train_start": 0,
+    "train_end": 3341,
+    "val_start": 3341,
+    "val_end": 4057,
+    "test_start": 4057,
+    "test_end": 4774
+  },
+  "config": {
+    "embeddings_path": "data/final/embeddings_v2.0",
+    "output_path": "data/vector_db/faiss_index_v1.0",
+    "index_type": "flat",
+    "nlist": 100,
+    "ram_gb": 8
+  },
+  "checksum": "c609ea0ae3dd1a7d0f9d1b2c1abfa0e2b5d9d94b38a0fe75ca86e47289b49560",
+  "hardware": {
+    "ram_gb": 8,
+    "cpu_only": true
+  }
+}
