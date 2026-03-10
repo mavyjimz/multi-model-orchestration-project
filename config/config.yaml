@@ -1,0 +1,41 @@
+# ============================================
+# MULTI-MODEL ORCHESTRATION - CONFIGURATION
+# ============================================
+
+# Phase 1: Data Pipeline (completed)
+data:
+  input_dir: "input-data"
+  processed_dir: "data/processed"
+  embeddings_dir: "data/embeddings"
+  final_dir: "data/final"
+
+# Phase 2: Document Processing & Embedding
+preprocessing:
+  max_length: 128
+  remove_urls: true
+  remove_emails: true
+  lemmatize: true
+  chunk_size: 500
+
+embedding:
+  model_name: "tfidf"
+  backend: "sklearn"
+  batch_size: 16
+  max_seq_length: 128
+  normalize: true
+
+validation:
+  sample_size: 500
+  intra_class_threshold: 0.35
+  inter_class_threshold: 0.15
+  outlier_threshold: 0.02
+
+storage:
+  version_major: 2
+  version_minor: 0
+  compress_artifacts: true
+
+# Logging
+logging:
+  level: "INFO"
+  log_dir: "logs"
