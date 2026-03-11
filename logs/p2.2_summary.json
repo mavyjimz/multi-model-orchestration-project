@@ -1,0 +1,43 @@
+{
+  "phase": "2.2",
+  "timestamp": "2026-03-10T15:51:49.858155",
+  "embedding_config": {
+    "model_name": "tfidf",
+    "backend": "sklearn",
+    "max_features": 5000,
+    "ngram_range": [
+      1,
+      2
+    ],
+    "normalize": true
+  },
+  "train_samples": 3341,
+  "val_samples": 716,
+  "test_samples": 717,
+  "vocab_size": 5000,
+  "embedding_dim": 5000,
+  "train_emb_shape": [
+    3341,
+    5000
+  ],
+  "val_emb_shape": [
+    716,
+    5000
+  ],
+  "test_emb_shape": [
+    717,
+    5000
+  ],
+  "train_emb_size_mb": 63.72,
+  "val_emb_size_mb": 13.66,
+  "test_emb_size_mb": 13.68,
+  "total_size_mb": 91.06,
+  "dtype": "float32",
+  "files_created": [
+    "data/embeddings/train_emb.npy",
+    "data/embeddings/val_emb.npy",
+    "data/embeddings/test_emb.npy",
+    "data/embeddings/vectorizer.pkl",
+    "data/embeddings/all_index_maps.pkl"
+  ]
+}

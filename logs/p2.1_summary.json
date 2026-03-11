@@ -1,0 +1,41 @@
+{
+  "phase": "2.1",
+  "name": "Document Preprocessing",
+  "start_time": "2026-03-10T10:29:27.996987",
+  "end_time": "2026-03-10T10:30:03.266701",
+  "duration_seconds": 35.269714,
+  "config": {
+    "max_length": 128,
+    "remove_urls": true,
+    "remove_emails": true,
+    "lemmatize": true,
+    "chunk_size": 500
+  },
+  "splits": {
+    "train": {
+      "total": 3341,
+      "processed": 3341,
+      "dropped": 0
+    },
+    "val": {
+      "total": 716,
+      "processed": 716,
+      "dropped": 0
+    },
+    "test": {
+      "total": 717,
+      "processed": 717,
+      "dropped": 0
+    }
+  },
+  "checksums": {
+    "data/processed/cleaned_split_train.csv": "b0b2ad7a7b84156242ed6e3f31073c0b6d30f0b0551d169511b9cda5de550ee6",
+    "data/processed/cleaned_split_val.csv": "ae60b0506c12570d0ff2b29f4597cdb57863d77fe078f4ae94f5f2006b1f89c1",
+    "data/processed/cleaned_split_test.csv": "fde6e46f6b1411d9ef8298cf086bc37f3a9628d88f872668a87017817a2ab4bd"
+  },
+  "drop_reasons": {
+    "empty_text": 0,
+    "too_short": 0,
+    "error": 0
+  }
+}

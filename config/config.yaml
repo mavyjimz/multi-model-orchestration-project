@@ -1,41 +1,14 @@
-# ============================================
-# MULTI-MODEL ORCHESTRATION - CONFIGURATION
-# ============================================
+vector_db:
+  index_path: data/vector_db/faiss_index_v1.0/index.faiss
+  metadata_path: data/vector_db/faiss_index_v1.0/index_metadata.json
+  vectorizer_path: data/final/embeddings_v2.0/vectorizer.pkl
 
-# Phase 1: Data Pipeline (completed)
-data:
-  input_dir: "input-data"
-  processed_dir: "data/processed"
-  embeddings_dir: "data/embeddings"
-  final_dir: "data/final"
+query:
+  top_k: 5
+  confidence_threshold: 0.5
+  max_history: 10
 
-# Phase 2: Document Processing & Embedding
-preprocessing:
-  max_length: 128
-  remove_urls: true
-  remove_emails: true
-  lemmatize: true
-  chunk_size: 500
-
-embedding:
-  model_name: "tfidf"
-  backend: "sklearn"
-  batch_size: 16
-  max_seq_length: 128
-  normalize: true
-
-validation:
-  sample_size: 500
-  intra_class_threshold: 0.35
-  inter_class_threshold: 0.15
-  outlier_threshold: 0.02
-
-storage:
-  version_major: 2
-  version_minor: 0
-  compress_artifacts: true
-
-# Logging
-logging:
-  level: "INFO"
-  log_dir: "logs"
+display:
+  show_metadata: true
+  show_scores: true
+  max_content_length: 500

@@ -1,0 +1,142 @@
+{
+  "phase": "3.1",
+  "timestamp": "2026-03-10T16:46:10.473819",
+  "elapsed_time_seconds": 0.6845200061798096,
+  "config": {
+    "embeddings_path": "data/final/embeddings_v2.0",
+    "output_path": "data/vector_db/faiss_index_v1.0",
+    "index_type": "flat",
+    "nlist": 100,
+    "ram_gb": 8
+  },
+  "metadata": {
+    "version": "1.0",
+    "created_at": "2026-03-10T16:46:10.423814",
+    "index_type": "flat",
+    "embedding_dimension": 5000,
+    "total_vectors": 4774,
+    "dataset_splits": {
+      "train": 3341,
+      "val": 716,
+      "test": 717
+    },
+    "index_maps": {
+      "train_start": 0,
+      "train_end": 3341,
+      "val_start": 3341,
+      "val_end": 4057,
+      "test_start": 4057,
+      "test_end": 4774
+    },
+    "config": {
+      "embeddings_path": "data/final/embeddings_v2.0",
+      "output_path": "data/vector_db/faiss_index_v1.0",
+      "index_type": "flat",
+      "nlist": 100,
+      "ram_gb": 8
+    },
+    "checksum": "c609ea0ae3dd1a7d0f9d1b2c1abfa0e2b5d9d94b38a0fe75ca86e47289b49560",
+    "hardware": {
+      "ram_gb": 8,
+      "cpu_only": true
+    }
+  },
+  "validation": {
+    "index_size": 4774,
+    "expected_size": 4774,
+    "dimension": 5000,
+    "is_trained": true,
+    "test_queries": [
+      {
+        "query_index": 81,
+        "distances": [
+          0.0,
+          0.5738866329193115,
+          0.670299232006073,
+          0.8525024056434631,
+          0.8558777570724487
+        ],
+        "neighbors": [
+          4138,
+          1849,
+          2687,
+          2721,
+          4534
+        ]
+      },
+      {
+        "query_index": 186,
+        "distances": [
+          0.0,
+          0.6938030123710632,
+          0.7122961282730103,
+          0.9036872386932373,
+          1.0
+        ],
+        "neighbors": [
+          4243,
+          581,
+          2758,
+          2646,
+          3650
+        ]
+      },
+      {
+        "query_index": 452,
+        "distances": [
+          0.0,
+          0.651602029800415,
+          0.7810741066932678,
+          0.8250685334205627,
+          0.8789560794830322
+        ],
+        "neighbors": [
+          4509,
+          363,
+          890,
+          2162,
+          1391
+        ]
+      },
+      {
+        "query_index": 541,
+        "distances": [
+          0.0,
+          0.8780099749565125,
+          0.9610562920570374,
+          1.0,
+          1.0
+        ],
+        "neighbors": [
+          4598,
+          4109,
+          2466,
+          3650,
+          4367
+        ]
+      },
+      {
+        "query_index": 438,
+        "distances": [
+          0.0,
+          0.34540197253227234,
+          0.40071821212768555,
+          0.6589811444282532,
+          0.7828357815742493
+        ],
+        "neighbors": [
+          4495,
+          1698,
+          3566,
+          2047,
+          4332
+        ]
+      }
+    ],
+    "passed": true
+  },
+  "files_created": [
+    "data/vector_db/faiss_index_v1.0/index.faiss",
+    "data/vector_db/faiss_index_v1.0/index_metadata.json"
+  ]
+}
