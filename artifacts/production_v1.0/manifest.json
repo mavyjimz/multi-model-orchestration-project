@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "created_at": "2026-03-11T09:54:20.202125",
+  "artifacts": {
+    "vectorizer": "data/final/embeddings_v2.0/vectorizer.pkl",
+    "index_maps": "data/final/embeddings_v2.0/all_index_maps.pkl",
+    "faiss_index": "data/vector_db/faiss_index_v1.0/index.faiss",
+    "metadata": "data/vector_db/faiss_index_v1.0/document_metadata.json"
+  },
+  "validation_status": "READY"
+}
