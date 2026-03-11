@@ -96,3 +96,26 @@ data/vector_db/**/*.json
 *.cache
 .cache/
 tmp/
+
+# ========================================
+# Phase 4: Model Development
+# ========================================
+
+# Phase 4 trained models (large binaries - keep in models/phase4/ but don't commit)
+models/phase*/
+models/phase4_baseline/
+models/*.pkl
+models/**/*.pkl
+
+# MLflow artifacts (auto-generated tracking data)
+mlruns/
+mlruns/**/*
+mlflow.db
+
+# Phase 4 temporary files
+phase4_temp/
+*.tmp.phase4
+
+# Keep only lightweight model metadata
+!models/phase4/MANIFEST.json
+!models/phase4/README.md

@@ -1,3 +1,10 @@
+# Phase 1-3: Data & Vector Database Configuration
+data:
+  train_path: data/processed/cleaned_split_train.csv
+  val_path: data/processed/cleaned_split_val.csv
+  test_path: data/processed/cleaned_split_test.csv
+  embeddings_path: data/final/embeddings_v2.0
+
 vector_db:
   index_path: data/vector_db/faiss_index_v1.0/index.faiss
   metadata_path: data/vector_db/faiss_index_v1.0/document_metadata.json
@@ -12,3 +19,21 @@ display:
   show_metadata: true
   show_scores: true
   max_content_length: 500
+
+# Phase 4: Model Development
+phase4:
+  target_accuracy: 0.90
+  cross_validation_folds: 5
+  random_state: 42
+  mlflow_experiment: phase4_model_selection
+  candidate_models:
+    - logistic_regression
+    - random_forest
+    - svm
+    - xgboost
+    - gradient_boosting
+    - naive_bayes
+    - knn
+    - decision_tree
+    - sgd
+    - lightgbm
