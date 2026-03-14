@@ -277,12 +277,12 @@ class ModelLoader:
             probabilities = self.model.predict_proba(text_vector)[0]
             
             # Get prediction label from model classes
-            prediction = self.classes[prediction_idx] if prediction_idx < len(self.classes) else f"class_{prediction_idx}"
+            prediction = str(self.classes[prediction_idx]) if prediction_idx < len(self.classes) else f"class_{prediction_idx}"
             
             # Create probability dictionary
             class_probs = {}
             for i, prob in enumerate(probabilities):
-                class_name = self.classes[i] if i < len(self.classes) else f"class_{i}"
+                class_name = str(self.classes[i]) if i < len(self.classes) else f"class_{i}"
                 class_probs[class_name] = float(prob)
             
             # Sort by probability
@@ -317,12 +317,12 @@ class ModelLoader:
             results = []
             for pred_idx, probs in zip(prediction_indices, probabilities):
                 # Get prediction label
-                prediction = self.classes[pred_idx] if pred_idx < len(self.classes) else f"class_{pred_idx}"
+                prediction = str(self.classes[pred_idx]) if pred_idx < len(self.classes) else f"class_{pred_idx}"
                 
                 # Create probability dictionary
                 class_probs = {}
                 for i, prob in enumerate(probs):
-                    class_name = self.classes[i] if i < len(self.classes) else f"class_{i}"
+                    class_name = str(self.classes[i]) if i < len(self.classes) else f"class_{i}"
                     class_probs[class_name] = float(prob)
                 
                 # Sort by probability
@@ -506,7 +506,7 @@ async def get_model_metadata():
         f1_score=metadata.get("metrics", {}).get("f1_score", 0.9652),
         training_date=metadata.get("training_date", "2026-03-14"),
         feature_count=5000,
-        classes=classes
+        classes=[str(c) for c in classes]
     )
 
 @app.post("/predict", response_model=PredictionResponse, tags=["Inference"])
