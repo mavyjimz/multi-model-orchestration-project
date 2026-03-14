@@ -1,0 +1,60 @@
+{
+  "model_name": "sgd",
+  "version": "v1.0.1",
+  "stage": "staging",
+  "registered_at": "2026-03-14T15:52:45.544776",
+  "registered_by": "mavyjimz",
+  "lineage": {
+    "code_version": {
+      "git_commit": "c3f1f10b81cdd14bda4d8c0792505674155a61a0",
+      "git_branch": "main",
+      "script": "p4.2-training-pipeline.py"
+    },
+    "data_version": {
+      "embeddings_version": "v2.0",
+      "train_samples": 3341,
+      "val_samples": 716,
+      "test_samples": 717,
+      "num_classes": 41
+    },
+    "hyperparameters": {
+      "loss": "hinge",
+      "penalty": "l2",
+      "alpha": 0.0001,
+      "max_iter": 1000,
+      "tol": 0.001,
+      "random_state": 42
+    },
+    "training_metrics": {
+      "train_accuracy": 0.9985034420832086,
+      "train_f1_macro": 0.9827051396659336,
+      "val_accuracy": 0.9622905027932961,
+      "val_f1_macro": 0.708712089570912,
+      "test_accuracy": 0.9693165969316597,
+      "test_f1_macro": 0.8311098584550742,
+      "test_f1_weighted": 0.9652189523349843,
+      "test_precision_macro": 0.8592133021678985,
+      "test_recall_macro": 0.8231630129490052
+    }
+  },
+  "performance": {
+    "accuracy": 0.9693165969316597,
+    "f1_score": 0.8311098584550742,
+    "meets_target": true
+  },
+  "deployment": {
+    "ready_for_staging": true,
+    "ready_for_production": false,
+    "deployment_notes": ""
+  },
+  "custom_metadata": {},
+  "promoted_at": "2026-03-14T15:52:50.170090",
+  "promotion_history": [
+    {
+      "from_stage": "development",
+      "to_stage": "staging",
+      "timestamp": "2026-03-14T15:52:50.170090",
+      "notes": "Best performing model (96.93% accuracy). Ready for validation."
+    }
+  ]
+}

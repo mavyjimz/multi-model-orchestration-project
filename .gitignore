@@ -124,3 +124,5 @@ phase4_temp/
 !models/phase4/*.json
 !models/phase4/README.md
 !models/phase4/*.txt
+models/registry/*/*.pkl
+models/registry/**/*.pkl
