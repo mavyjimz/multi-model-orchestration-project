@@ -1,0 +1,58 @@
+{
+  "project": "Multi-Model Orchestration System",
+  "phase": "4.2 - Training Pipeline",
+  "version": "1.0.1",
+  "generated_at": "2026-03-14T15:38:57.181166",
+  "config": {
+    "target_accuracy": 0.9,
+    "random_state": 42,
+    "cv_folds": 5
+  },
+  "models": {
+    "sgd": {
+      "filename": "sgd_v1.0.1.pkl",
+      "version": "1.0.1",
+      "path": "/home/vanjunn-pongasi/MLOps/multi-model-orchestration-project/models/phase4/sgd_v1.0.1.pkl",
+      "checksum_md5": "01450799f19915df306e360a4abb4a09",
+      "size_mb": 0.78,
+      "metrics": {
+        "train_accuracy": 0.9985034420832086,
+        "train_f1_macro": 0.9827051396659336,
+        "val_accuracy": 0.9622905027932961,
+        "val_f1_macro": 0.708712089570912,
+        "test_accuracy": 0.9693165969316597,
+        "test_f1_macro": 0.8311098584550742,
+        "test_f1_weighted": 0.9652189523349843,
+        "test_precision_macro": 0.8592133021678985,
+        "test_recall_macro": 0.8231630129490052
+      },
+      "meets_target": true
+    },
+    "random_forest": {
+      "filename": "random_forest_v1.0.1.pkl",
+      "version": "1.0.1",
+      "path": "/home/vanjunn-pongasi/MLOps/multi-model-orchestration-project/models/phase4/random_forest_v1.0.1.pkl",
+      "checksum_md5": "92871734b7650f77cfe88db226cd0de3",
+      "size_mb": 3.92,
+      "metrics": {
+        "train_accuracy": 0.9221789883268483,
+        "train_f1_macro": 0.7834894372069454,
+        "val_accuracy": 0.8715083798882681,
+        "val_f1_macro": 0.5484793692962315,
+        "test_accuracy": 0.8967921896792189,
+        "test_f1_macro": 0.6883368012334894,
+        "test_f1_weighted": 0.9049003435825705,
+        "test_precision_macro": 0.6544981992695738,
+        "test_recall_macro": 0.7987798355989018,
+        "test_roc_auc_ovr": 0.0
+      },
+      "meets_target": false
+    }
+  },
+  "summary": {
+    "total_models_trained": 2,
+    "models_exceeding_target": 1,
+    "best_model": "sgd",
+    "best_accuracy": 0.9693165969316597
+  }
+}

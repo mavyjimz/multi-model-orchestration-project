@@ -119,3 +119,8 @@ phase4_temp/
 # Keep only lightweight model metadata
 !models/phase4/MANIFEST.json
 !models/phase4/README.md
+
+# Updated Phase 4 exceptions - track manifests and metadata
+!models/phase4/*.json
+!models/phase4/README.md
+!models/phase4/*.txt
