@@ -1,0 +1,28 @@
+{
+  "end_to_end": {
+    "summary": {
+      "total": 20,
+      "success": 20,
+      "failed": 0,
+      "success_rate": 100.0,
+      "latency_avg_ms": 1.72,
+      "meets_budget": true
+    }
+  },
+  "audit": {
+    "size": {
+      "mb": 0.78,
+      "passed": true
+    },
+    "load": {
+      "ms": 52.12,
+      "passed": true
+    },
+    "memory": {
+      "mb": 2.35,
+      "passed": true
+    },
+    "all_passed": true
+  },
+  "status": "COMPLETE"
+}
