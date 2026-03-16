@@ -1,0 +1,81 @@
+{
+  "total": 23,
+  "passed": 13,
+  "failed": 10,
+  "errors": 0,
+  "skipped": 0,
+  "duration": 0.7358846664428711,
+  "test_results": [
+    {
+      "class": "TestAPIEndpoints",
+      "name": "test_01_health_endpoint",
+      "status": "failed",
+      "error": "Traceback (most recent call last):\n  File \"/home/vanjunn-pongasi/MLOps/venv-mlops/lib/python3.12/site-packages/urllib3/connection.py\", line 204, in _new_conn\n    sock = connection.create_connection(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/vanjunn-pongasi/MLOps/venv-mlops/lib/python3.12/site-packages/urllib3/util/connection.py\", line 85, in create_connection\n    raise err\n  File \"/home/vanjunn-pongasi/MLOps/venv-mlops/lib/python3.12/site-packages/urllib3/util/connection.py\", line 7",
+      "duration": 0
+    },
+    {
+      "class": "TestAPIEndpoints",
+      "name": "test_02_model_metadata_endpoint",
+      "status": "failed",
+      "error": "Traceback (most recent call last):\n  File \"/home/vanjunn-pongasi/MLOps/venv-mlops/lib/python3.12/site-packages/urllib3/connection.py\", line 204, in _new_conn\n    sock = connection.create_connection(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/vanjunn-pongasi/MLOps/venv-mlops/lib/python3.12/site-packages/urllib3/util/connection.py\", line 85, in create_connection\n    raise err\n  File \"/home/vanjunn-pongasi/MLOps/venv-mlops/lib/python3.12/site-packages/urllib3/util/connection.py\", line 7",
+      "duration": 0
+    },
+    {
+      "class": "TestAPIEndpoints",
+      "name": "test_03_single_prediction",
+      "status": "failed",
+      "error": "Traceback (most recent call last):\n  File \"/home/vanjunn-pongasi/MLOps/venv-mlops/lib/python3.12/site-packages/urllib3/connection.py\", line 204, in _new_conn\n    sock = connection.create_connection(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/vanjunn-pongasi/MLOps/venv-mlops/lib/python3.12/site-packages/urllib3/util/connection.py\", line 85, in create_connection\n    raise err\n  File \"/home/vanjunn-pongasi/MLOps/venv-mlops/lib/python3.12/site-packages/urllib3/util/connection.py\", line 7",
+      "duration": 0
+    },
+    {
+      "class": "TestAPIEndpoints",
+      "name": "test_04_batch_prediction",
+      "status": "failed",
+      "error": "Traceback (most recent call last):\n  File \"/home/vanjunn-pongasi/MLOps/venv-mlops/lib/python3.12/site-packages/urllib3/connection.py\", line 204, in _new_conn\n    sock = connection.create_connection(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/vanjunn-pongasi/MLOps/venv-mlops/lib/python3.12/site-packages/urllib3/util/connection.py\", line 85, in create_connection\n    raise err\n  File \"/home/vanjunn-pongasi/MLOps/venv-mlops/lib/python3.12/site-packages/urllib3/util/connection.py\", line 7",
+      "duration": 0
+    },
+    {
+      "class": "TestAPIEndpoints",
+      "name": "test_05_prediction_latency",
+      "status": "failed",
+      "error": "Traceback (most recent call last):\n  File \"/home/vanjunn-pongasi/MLOps/venv-mlops/lib/python3.12/site-packages/urllib3/connection.py\", line 204, in _new_conn\n    sock = connection.create_connection(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/vanjunn-pongasi/MLOps/venv-mlops/lib/python3.12/site-packages/urllib3/util/connection.py\", line 85, in create_connection\n    raise err\n  File \"/home/vanjunn-pongasi/MLOps/venv-mlops/lib/python3.12/site-packages/urllib3/util/connection.py\", line 7",
+      "duration": 0
+    },
+    {
+      "class": "TestAPIEndpoints",
+      "name": "test_06_empty_text_handling",
+      "status": "failed",
+      "error": "Traceback (most recent call last):\n  File \"/home/vanjunn-pongasi/MLOps/venv-mlops/lib/python3.12/site-packages/urllib3/connection.py\", line 204, in _new_conn\n    sock = connection.create_connection(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/vanjunn-pongasi/MLOps/venv-mlops/lib/python3.12/site-packages/urllib3/util/connection.py\", line 85, in create_connection\n    raise err\n  File \"/home/vanjunn-pongasi/MLOps/venv-mlops/lib/python3.12/site-packages/urllib3/util/connection.py\", line 7",
+      "duration": 0
+    },
+    {
+      "class": "TestAPIEndpoints",
+      "name": "test_07_very_long_text_handling",
+      "status": "failed",
+      "error": "Traceback (most recent call last):\n  File \"/home/vanjunn-pongasi/MLOps/venv-mlops/lib/python3.12/site-packages/urllib3/connection.py\", line 204, in _new_conn\n    sock = connection.create_connection(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/vanjunn-pongasi/MLOps/venv-mlops/lib/python3.12/site-packages/urllib3/util/connection.py\", line 85, in create_connection\n    raise err\n  File \"/home/vanjunn-pongasi/MLOps/venv-mlops/lib/python3.12/site-packages/urllib3/util/connection.py\", line 7",
+      "duration": 0
+    },
+    {
+      "class": "TestAPIEndpoints",
+      "name": "test_08_special_characters",
+      "status": "failed",
+      "error": "Traceback (most recent call last):\n  File \"/home/vanjunn-pongasi/MLOps/venv-mlops/lib/python3.12/site-packages/urllib3/connection.py\", line 204, in _new_conn\n    sock = connection.create_connection(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/vanjunn-pongasi/MLOps/venv-mlops/lib/python3.12/site-packages/urllib3/util/connection.py\", line 85, in create_connection\n    raise err\n  File \"/home/vanjunn-pongasi/MLOps/venv-mlops/lib/python3.12/site-packages/urllib3/util/connection.py\", line 7",
+      "duration": 0
+    },
+    {
+      "class": "TestAPIEndpoints",
+      "name": "test_09_invalid_payload",
+      "status": "failed",
+      "error": "Traceback (most recent call last):\n  File \"/home/vanjunn-pongasi/MLOps/venv-mlops/lib/python3.12/site-packages/urllib3/connection.py\", line 204, in _new_conn\n    sock = connection.create_connection(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/vanjunn-pongasi/MLOps/venv-mlops/lib/python3.12/site-packages/urllib3/util/connection.py\", line 85, in create_connection\n    raise err\n  File \"/home/vanjunn-pongasi/MLOps/venv-mlops/lib/python3.12/site-packages/urllib3/util/connection.py\", line 7",
+      "duration": 0
+    },
+    {
+      "class": "TestAPIEndpoints",
+      "name": "test_10_metrics_endpoint",
+      "status": "failed",
+      "error": "Traceback (most recent call last):\n  File \"/home/vanjunn-pongasi/MLOps/venv-mlops/lib/python3.12/site-packages/urllib3/connection.py\", line 204, in _new_conn\n    sock = connection.create_connection(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/vanjunn-pongasi/MLOps/venv-mlops/lib/python3.12/site-packages/urllib3/util/connection.py\", line 85, in create_connection\n    raise err\n  File \"/home/vanjunn-pongasi/MLOps/venv-mlops/lib/python3.12/site-packages/urllib3/util/connection.py\", line 7",
+      "duration": 0
+    }
+  ],
+  "timestamp": "2026-03-16T16:10:30.372236"
+}
