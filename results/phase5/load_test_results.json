@@ -1,0 +1,97 @@
+{
+  "test_config": {
+    "concurrency_levels": [
+      1,
+      5,
+      10,
+      25,
+      50
+    ],
+    "requests_per_level": 100,
+    "warmup_requests": 10
+  },
+  "model_info": {
+    "version": "sgd_v1.0.1",
+    "features": 5000,
+    "classes": 41
+  },
+  "results": [
+    {
+      "concurrency": 1,
+      "total_requests": 100,
+      "successful_requests": 100,
+      "failed_requests": 0,
+      "success_rate": 100.0,
+      "latency_avg_ms": 1.06603793999966,
+      "latency_p50_ms": 0.8307284999773401,
+      "latency_p95_ms": 2.4998003999371563,
+      "latency_p99_ms": 3.3670362803422917,
+      "latency_min_ms": 0.634855000043899,
+      "latency_max_ms": 3.6524809997899865,
+      "throughput_rps": 27378.650294347837,
+      "errors": []
+    },
+    {
+      "concurrency": 5,
+      "total_requests": 100,
+      "successful_requests": 100,
+      "failed_requests": 0,
+      "success_rate": 100.0,
+      "latency_avg_ms": 4.218762450013855,
+      "latency_p50_ms": 4.109041499987143,
+      "latency_p95_ms": 6.643622149590555,
+      "latency_p99_ms": 6.938794960010458,
+      "latency_min_ms": 1.1348469997756183,
+      "latency_max_ms": 7.617930999913369,
+      "throughput_rps": 13126.923832880238,
+      "errors": []
+    },
+    {
+      "concurrency": 10,
+      "total_requests": 100,
+      "successful_requests": 100,
+      "failed_requests": 0,
+      "success_rate": 100.0,
+      "latency_avg_ms": 8.585926879973158,
+      "latency_p50_ms": 7.397318499897665,
+      "latency_p95_ms": 16.803046049676595,
+      "latency_p99_ms": 20.58012904992668,
+      "latency_min_ms": 2.3693029997957638,
+      "latency_max_ms": 25.118590999682056,
+      "throughput_rps": 3981.115023580175,
+      "errors": []
+    },
+    {
+      "concurrency": 25,
+      "total_requests": 100,
+      "successful_requests": 100,
+      "failed_requests": 0,
+      "success_rate": 100.0,
+      "latency_avg_ms": 7.588748539997141,
+      "latency_p50_ms": 5.900469999915003,
+      "latency_p95_ms": 21.745302099930086,
+      "latency_p99_ms": 24.748895400102825,
+      "latency_min_ms": 1.3412669995886972,
+      "latency_max_ms": 27.364614000362053,
+      "throughput_rps": 3654.3544885623796,
+      "errors": []
+    },
+    {
+      "concurrency": 50,
+      "total_requests": 100,
+      "successful_requests": 100,
+      "failed_requests": 0,
+      "success_rate": 100.0,
+      "latency_avg_ms": 5.457404830003725,
+      "latency_p50_ms": 4.951186499965843,
+      "latency_p95_ms": 10.513615399941045,
+      "latency_p99_ms": 13.907254320088226,
+      "latency_min_ms": 1.2363310002001526,
+      "latency_max_ms": 16.440498000065418,
+      "throughput_rps": 6082.540808654464,
+      "errors": []
+    }
+  ],
+  "timestamp": "2026-03-16T16:23:21.750469",
+  "duration_seconds": 0.6144459247589111
+}

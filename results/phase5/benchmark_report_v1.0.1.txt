@@ -1,0 +1,47 @@
+LOAD & STRESS TESTING BENCHMARK REPORT
+==================================================
+
+Model: SGD v1.0.1
+Features: 5000 TF-IDF dimensions
+Classes: 41 intent classes
+
+PERFORMANCE METRICS:
+--------------------------------------------------
+
+Concurrency: 1
+  Success Rate: 100.0%
+  Avg Latency:  1.07 ms
+  P95 Latency:  2.50 ms
+  P99 Latency:  3.37 ms
+  Throughput:   27378.7 RPS
+
+Concurrency: 5
+  Success Rate: 100.0%
+  Avg Latency:  4.22 ms
+  P95 Latency:  6.64 ms
+  P99 Latency:  6.94 ms
+  Throughput:   13126.9 RPS
+
+Concurrency: 10
+  Success Rate: 100.0%
+  Avg Latency:  8.59 ms
+  P95 Latency:  16.80 ms
+  P99 Latency:  20.58 ms
+  Throughput:   3981.1 RPS
+
+Concurrency: 25
+  Success Rate: 100.0%
+  Avg Latency:  7.59 ms
+  P95 Latency:  21.75 ms
+  P99 Latency:  24.75 ms
+  Throughput:   3654.4 RPS
+
+Concurrency: 50
+  Success Rate: 100.0%
+  Avg Latency:  5.46 ms
+  P95 Latency:  10.51 ms
+  P99 Latency:  13.91 ms
+  Throughput:   6082.5 RPS
+
+==================================================
+Test Duration: 0.61 seconds
