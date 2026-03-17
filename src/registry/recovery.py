@@ -7,7 +7,7 @@ import shutil
 from datetime import datetime
 from typing import Dict, List, Optional, Any
 
-from .config import get_project_root
+from .config import PROJECT_ROOT
 
 
 class RecoveryValidator:
@@ -72,7 +72,7 @@ def restore_from_backup(
     components: Optional[List[str]] = None
 ) -> Dict[str, Any]:
     """Full restore workflow with pre/post validation"""
-    project_root = get_project_root()
+    project_root = str(PROJECT_ROOT)
     backup_dir = os.path.join(project_root, 'backups')
     
     if target_dir is None:
@@ -128,7 +128,7 @@ def restore_from_backup(
 def list_available_backups(backup_dir: Optional[str] = None, limit: int = 50) -> List[Dict]:
     """List available backups with metadata"""
     if backup_dir is None:
-        backup_dir = os.path.join(get_project_root(), 'backups')
+        backup_dir = os.path.join(str(PROJECT_ROOT), 'backups')
     
     backups = []
     if os.path.exists(backup_dir):
