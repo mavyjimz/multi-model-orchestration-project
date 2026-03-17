@@ -142,3 +142,9 @@ models/registry/**/*.pkl
 # Phase 5 test artifacts
 !tests/*.py
 !tests/**/*.py
+
+# Phase 6 Artifacts & Results
+artifacts/
+results/
+*.sh
+
