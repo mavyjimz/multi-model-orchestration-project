@@ -1,0 +1,161 @@
+{
+  "model_name": "intent-classifier-sgd",
+  "version": "1",
+  "enriched_at": "2026-03-17T10:13:21.035771",
+  "enrichment_schema_version": "1.0.0",
+  "git": {
+    "commit_hash": "d3659d1b1316f9063b8b5268982907cb3261e47e",
+    "short_hash": "d3659d1",
+    "branch": "main",
+    "remote_url": "https://github.com/mavyjimz/multi-model-orchestration-project.git",
+    "tags": [],
+    "last_commit_msg": "feat(phase6): Complete p6.4 model promotion workflow with gates\n\n- Implement PromotionWorkflow class with environment stages (dev->staging->prod)\n- Load gate criteria from registry_schema_v1.0.0.json\n",
+    "commit_timestamp": "2026-03-17T10:11:34+08:00"
+  },
+  "data_lineage": {
+    "data_version": "v1.0",
+    "total_samples": 4786,
+    "split_ratios": {
+      "train": 0.7,
+      "val": 0.15,
+      "test": 0.15
+    },
+    "split_counts": {
+      "train": 3341,
+      "val": 716,
+      "test": 717
+    },
+    "feature_engineering": {
+      "method": "TF-IDF",
+      "max_features": 5000,
+      "ngram_range": [
+        1,
+        2
+      ],
+      "min_df": 2,
+      "vectorizer_path": "data/final/embeddings_v2.0/vectorizer.pkl"
+    },
+    "intent_classes": 41,
+    "class_distribution_file": "results/phase1/class_distribution.json",
+    "dvc_tracked": true
+  },
+  "hyperparameters": {
+    "model_type": "SGDClassifier",
+    "framework": "scikit-learn==1.3.0",
+    "optimization_method": "grid_search",
+    "hyperparameters": {
+      "loss": "log_loss",
+      "penalty": "l2",
+      "alpha": 0.0001,
+      "max_iter": 1000,
+      "tol": 0.001,
+      "random_state": 42,
+      "class_weight": "balanced"
+    },
+    "search_space": {
+      "alpha": [
+        0.0001,
+        0.001,
+        0.01
+      ],
+      "penalty": [
+        "l1",
+        "l2",
+        "elasticnet"
+      ],
+      "loss": [
+        "log_loss",
+        "hinge"
+      ]
+    },
+    "selection_criteria": "highest_validation_accuracy",
+    "cv_folds": 5,
+    "best_cv_score": 0.7234
+  },
+  "performance": {
+    "overall": {
+      "accuracy": 0.7169,
+      "precision_macro": 0.7245,
+      "recall_macro": 0.7103,
+      "f1_macro": 0.7156,
+      "latency_p50_ms": 1.72,
+      "latency_p95_ms": 21.75,
+      "latency_p99_ms": 45.3
+    },
+    "per_class_file": "results/phase5/per_class_metrics_v1.0.1.csv",
+    "confusion_matrix_file": "results/phase5/confusion_matrix_v1.0.1.png",
+    "weak_classes": [
+      "ask_question",
+      "cancel",
+      "maybe"
+    ],
+    "test_set_size": 717
+  },
+  "dependencies": {
+    "core_dependencies": {
+      "faiss-cpu": "1.13.2",
+      "fastapi": "0.109.0",
+      "mlflow": "2.11.0",
+      "numpy": "1.26.2",
+      "pandas": "2.1.3",
+      "scikit-learn": "1.8.0"
+    },
+    "all_dependencies_count": 193,
+    "system_info": {
+      "platform": "Linux-6.17.0-19-generic-x86_64-with-glibc2.39",
+      "python": "Python 3.12.3",
+      "cpu_count": 8,
+      "memory_gb": 7.57
+    },
+    "requirements_file": "requirements.txt",
+    "environment_file": "environment.yaml"
+  },
+  "operational": {
+    "ownership": {
+      "team": "mavyjimz-mlops",
+      "owner": "Vanjunn Pongasi",
+      "contact": "vanjunn.pongasi.mavy@gmail.com",
+      "slack_channel": "#mlops-alerts"
+    },
+    "sla_targets": {
+      "availability": "99.9%",
+      "p95_latency_ms": 100,
+      "max_error_rate": 0.01,
+      "recovery_time_objective_minutes": 15
+    },
+    "cost_estimates": {
+      "inference_cost_per_1k_requests_usd": 0.002,
+      "monthly_budget_usd": 50,
+      "scaling_trigger_cpu_percent": 70
+    },
+    "runbook_links": {
+      "deployment": "docs/runbooks/deployment.md",
+      "rollback": "docs/runbooks/rollback.md",
+      "incident_response": "docs/runbooks/incident-response.md"
+    },
+    "monitoring": {
+      "metrics_endpoint": "/metrics",
+      "health_endpoint": "/health",
+      "alert_rules": "config/alerts/prometheus-rules.yaml"
+    }
+  },
+  "compliance": {
+    "data_classification": "internal",
+    "pii_handling": {
+      "contains_pii": false,
+      "anonymization_applied": true,
+      "retention_days": 365
+    },
+    "audit_requirements": {
+      "log_all_predictions": true,
+      "log_model_access": true,
+      "retention_days": 90
+    },
+    "regulatory_tags": [
+      "internal-use",
+      "ml-experimental"
+    ],
+    "approval_status": "staging-approved",
+    "next_review_date": "2026-06-17"
+  }
+}

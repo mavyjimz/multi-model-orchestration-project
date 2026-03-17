@@ -1,0 +1,18 @@
+{
+  "phase": "6.5",
+  "timestamp": "2026-03-17T10:13:21.147182",
+  "model_name": "intent-classifier-sgd",
+  "version": "1",
+  "enrichment_sections": [
+    "git",
+    "data_lineage",
+    "hyperparameters",
+    "performance",
+    "dependencies",
+    "operational",
+    "compliance"
+  ],
+  "validation_passed": true,
+  "manifest_path": "/home/vanjunn-pongasi/MLOps/multi-model-orchestration-project/results/phase6/intent-classifier-sgd_v1_enriched_manifest.json",
+  "dry_run": false
+}

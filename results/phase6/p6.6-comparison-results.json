@@ -1,0 +1,76 @@
+{
+  "timestamp": "2026-03-17T10:52:21.020404",
+  "test_samples": 717,
+  "models": [
+    {
+      "name": "intent-classifier-sgd",
+      "version": "1",
+      "metrics": {
+        "name": "intent-classifier-sgd",
+        "version": "1",
+        "stage": "Staging",
+        "metrics": {},
+        "params": {},
+        "tags": {
+          "model.version": "1.0.2",
+          "git.commit_message": "feat(phase6): Complete p6.1 MLflow registry setup and schema standardization\n\n- Initialize MLflow Tracking Server with local backend store\n- Create experiment 'multi-model-orchestration' (ID: 13257020",
+          "mlflow.source.name": "scripts/phase6/p6.2-semantic-versioning.py",
+          "git.branch": "main",
+          "git.short_hash": "d82d7ce",
+          "model.semver.minor": "0",
+          "mlflow.log-model.history": "[{\"run_id\": \"6ec2ca03b73e4fcfa1b918fcbe9ee73c\", \"artifact_path\": \"model\", \"utc_time_created\": \"2026-03-17 01:55:23.275253\", \"flavors\": {\"sklearn\": {\"pickled_model\": \"model.pkl\", \"sklearn_version\": \"1.8.0\", \"serialization_format\": \"cloudpickle\", \"code\": null}}, \"model_uuid\": \"268c083c7f13443c82f372e1dedc0f25\", \"mlflow_version\": \"2.11.0\", \"model_size_bytes\": 105}]",
+          "registry.registered_at": "2026-03-17T09:55:23.270685",
+          "mlflow.runName": "intent-classifier-sgd-v1.0.2",
+          "mlflow.source.git.commit": "d82d7cecf68868540e3f1f5cbc7802524bffeacf",
+          "model.semver.major": "1",
+          "git.commit_hash": "d82d7cecf68868540e3f1f5cbc7802524bffeacf",
+          "mlflow.source.type": "LOCAL",
+          "mlflow.user": "vanjunn-pongasi",
+          "model.semver.patch": "2"
+        },
+        "artifacts": [
+          "model"
+        ],
+        "created": 1773712526383,
+        "last_updated": 1773713354160,
+        "accuracy_ci_lower": 0.0,
+        "accuracy_ci_upper": 0.0
+      },
+      "business_impact": {
+        "monthly_inference_cost": 100.0,
+        "monthly_revenue": 0.0,
+        "monthly_error_cost": 50000.0,
+        "net_monthly_value": -50100.0,
+        "annualized_net_value": -601200.0,
+        "cost_per_correct_prediction": Infinity,
+        "roi_percentage": -50200.0,
+        "latency_compliance": true,
+        "assumptions": {
+          "cost_per_inference": 0.001,
+          "revenue_per_correct": 0.1,
+          "cost_per_error": 0.5,
+          "monthly_predictions": 100000
+        }
+      },
+      "weighted_score": 0.29,
+      "predictions_available": true
+    }
+  ],
+  "pairwise_tests": [],
+  "recommendation": {
+    "recommended_model": "intent-classifier-sgd",
+    "recommended_version": "1",
+    "weighted_score": 0.29,
+    "meets_threshold": false,
+    "promotion_ready": false,
+    "reasoning": [
+      "Weighted score 0.2900 below threshold 0.75",
+      "Meets latency SLA (P95 <= 100ms)"
+    ],
+    "risks": [],
+    "next_steps": [
+      "Continue A/B testing with increased traffic allocation",
+      "Review feature engineering for accuracy improvement"
+    ]
+  }
+}
