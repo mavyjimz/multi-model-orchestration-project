@@ -126,3 +126,19 @@ phase4_temp/
 !models/phase4/*.txt
 models/registry/*/*.pkl
 models/registry/**/*.pkl
+
+# ========================================
+# Phase 5: Model Validation & Testing
+# ========================================
+
+# Phase 5 results - KEEP ALL (metrics, reports, visualizations)
+!results/phase5/*.json
+!results/phase5/*.csv
+!results/phase5/*.png
+!results/phase5/*.txt
+!results/phase5/*.xml
+!results/phase5/*.yaml
+
+# Phase 5 test artifacts
+!tests/*.py
+!tests/**/*.py

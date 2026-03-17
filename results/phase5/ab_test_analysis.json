@@ -1,0 +1,57 @@
+{
+  "timestamp": "2026-03-17T08:08:13.485374",
+  "test_id": "ab_test_20260317_080813",
+  "primary_model": {
+    "name": "SGD v1.0.1",
+    "metrics": {
+      "accuracy": 0.7259036144578314,
+      "f1_weighted": 0.610620492440968,
+      "f1_macro": 0.038235760748849754,
+      "avg_latency": 0.06645893072290854,
+      "sample_count": 332
+    }
+  },
+  "candidate_model": {
+    "name": "XGBoost v1.0.1_balanced",
+    "metrics": {
+      "accuracy": 0.0,
+      "f1_weighted": 0.0,
+      "f1_macro": 0.0,
+      "avg_latency": 0.19997021558461334,
+      "sample_count": 385
+    }
+  },
+  "statistical_tests": {
+    "chi_square_test": {
+      "statistic": 417.7239366780546,
+      "p_value": 7.635922863940765e-93,
+      "significant": "True"
+    },
+    "latency_comparison": {
+      "primary_avg_ms": 0.06645893072290854,
+      "candidate_avg_ms": 0.19997021558461334,
+      "difference_ms": 0.1335112848617048,
+      "candidate_slower": true
+    }
+  },
+  "rollback_decision": {
+    "rollback_triggered": true,
+    "reasons": [
+      "Accuracy drop 0.7259 > 0.05",
+      "F1 drop 0.6106 > 0.05"
+    ],
+    "recommendation": "ROLLBACK"
+  },
+  "config": {
+    "primary_model_path": "models/phase4/sgd_v1.0.1.pkl",
+    "candidate_model_path": "models/phase4/xgboost_v1.0.1_balanced.pkl",
+    "vectorizer_path": "data/final/embeddings_v2.0/vectorizer.pkl",
+    "test_data_path": "data/processed/cleaned_split_test.csv",
+    "output_path": "results/phase5/ab_test_analysis.json",
+    "rollback_thresholds": {
+      "max_accuracy_drop": 0.05,
+      "max_f1_drop": 0.05,
+      "max_latency_increase_ms": 50
+    }
+  }
+}

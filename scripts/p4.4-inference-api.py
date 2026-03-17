@@ -227,10 +227,17 @@ class ModelLoader:
                 raise FileNotFoundError(f"Model not found: {model_path}")
             
             with open(model_path, 'rb') as f:
-                self.model = pickle.load(f)
+            loaded = pickle.load(f)
+            
+            # Extract model from dictionary wrapper if present
+            if isinstance(loaded, dict):
+                self.model = loaded.get("model", loaded)
+                logger.info("  Model extracted from dictionary wrapper")
+            else:
+                self.model = loaded
             logger.info(f"✓ Model loaded: {model_path}")
             logger.info(f"  Model type: {self.model.__class__.__name__}")
-            logger.info(f"  Model classes: {self.model.classes_}")
+            logger.info(f"  Model classes: {getattr(self.model, "classes_", "N/A")}")
             
             # Load vectorizer
             vectorizer_path = Config.EMBEDDING_PATH / Config.VECTORIZER_FILE
@@ -250,7 +257,12 @@ class ModelLoader:
                 logger.info(f"✓ Metadata loaded: {metadata_path}")
             
             # Get classes directly from model
+        # Extract classes safely
+        if hasattr(self.model, "classes_"):
             self.classes = self.model.classes_.tolist()
+        else:
+            self.classes = []
+            logger.warning("Model has no classes_ attribute")
             logger.info(f"✓ Classes loaded: {len(self.classes)} classes")
             
             self.is_loaded = True
