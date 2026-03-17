@@ -1,0 +1,42 @@
+{
+  "storage_version": "1.0.0",
+  "backend": "local",
+  "s3_compatible": true,
+  "base_path": "/home/vanjunn-pongasi/MLOps/multi-model-orchestration-project/artifacts",
+  "s3_config": {
+    "bucket_template": "s3://{bucket-name}/models/{model_name}/{version}/",
+    "region": "us-east-1",
+    "encryption": "AES256",
+    "versioning_enabled": true
+  },
+  "retention_policy": {
+    "development": {
+      "days": 30,
+      "auto_delete": true
+    },
+    "staging": {
+      "days": 90,
+      "auto_delete": false
+    },
+    "production": {
+      "days": 365,
+      "auto_delete": false
+    },
+    "archived": {
+      "retention": "indefinite"
+    }
+  },
+  "integrity_checks": {
+    "checksum_algorithm": "SHA256",
+    "verify_on_download": true,
+    "verify_on_upload": true
+  },
+  "supported_artifact_types": [
+    "model",
+    "metadata",
+    "config",
+    "dataset",
+    "evaluation",
+    "logs"
+  ]
+}
