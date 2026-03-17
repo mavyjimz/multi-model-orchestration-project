@@ -172,3 +172,63 @@ class ModelQueryRequest(BaseModel):
 # Alias for api.py compatibility (HealthResponse is the canonical name)
 RegistryHealthResponse = HealthResponse
 
+
+
+# ============================================================================
+# Backup & Recovery API Schemas (Phase 6.9)
+# ============================================================================
+
+class BackupRequest(BaseModel):
+    """Request schema for POST /backup endpoint"""
+    components: Optional[List[str]] = Field(
+        default=None,
+        description="List of components to backup. If None, uses policy defaults."
+    )
+    compression: Optional[str] = Field(
+        default="gzip",
+        description="Compression algorithm: gzip, bzip2, or none"
+    )
+    include_encryption: bool = Field(
+        default=False,
+        description="Whether to encrypt backup archive (requires encryption_key config)"
+    )
+    dry_run: bool = Field(
+        default=False,
+        description="If true, simulate backup without writing files"
+    )
+    policy_override: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="Optional policy parameters to override config/backup_policy.yaml"
+    )
+    
+    @field_validator('compression')
+    @classmethod
+    def validate_compression(cls, v):
+        if v not in ["gzip", "bzip2", "none", None]:
+            raise ValueError('compression must be gzip, bzip2, or none')
+        return v
+
+
+class BackupResponse(BaseModel):
+    """Response schema for POST /backup endpoint"""
+    job_id: str
+    status: str  # "initiated", "completed", "failed", "dry_run"
+    manifest: Optional[Dict[str, Any]] = None
+    message: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class ListBackupsQuery(BaseModel):
+    """Query parameters for GET /backups endpoint"""
+    component: Optional[str] = Field(default=None, description="Filter by component name")
+    status: Optional[str] = Field(default=None, description="Filter by backup status")
+    limit: int = Field(default=50, ge=1, le=200, description="Max results to return")
+    offset: int = Field(default=0, ge=0, description="Pagination offset")
+
+
+class ListBackupsResponse(BaseModel):
+    """Response schema for GET /backups endpoint"""
+    backups: List[Dict[str, Any]]
+    total_count: int
+    page: int = 1
+    page_size: int = 50

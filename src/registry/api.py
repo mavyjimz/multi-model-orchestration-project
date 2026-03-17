@@ -1,9 +1,10 @@
+import uuid
 """
 FastAPI application for Model Registry - MLflow 2.11.0 Compatible
 """
-from fastapi import FastAPI, HTTPException, status, Depends
+from fastapi import FastAPI, HTTPException, status, Depends, BackgroundTasks
 from fastapi.responses import JSONResponse
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from datetime import datetime
 import mlflow
 from mlflow.tracking import MlflowClient
@@ -13,10 +14,13 @@ import logging
 from .schemas import (
     ModelRegisterRequest, ModelPromoteRequest, ModelQueryRequest,
     ModelInfo, ModelListResponse, RegistryHealthResponse,
-    DeprecationRequest, RetirementRequest, AuditLogEntry
+    DeprecationRequest, RetirementRequest, AuditLogEntry,
+    BackupRequest, BackupResponse, ListBackupsQuery, ListBackupsResponse
 )
 
 logger = logging.getLogger(__name__)
+from .backup import load_backup_policy, backup_component, get_backup_destination, BackupManifest
+from .audit import log_lifecycle_event
 app = FastAPI(title="Multi-Model Orchestration Registry API", version="1.0.0")
 
 mlflow_client: Optional[MlflowClient] = None
@@ -496,3 +500,128 @@ async def query_audit(
     
     return results
 
+
+
+# ============================================================================
+# Backup API Endpoints (Phase 6.9)
+# ============================================================================
+
+@app.post("/backup", response_model=BackupResponse)
+async def trigger_backup(request: BackupRequest, background_tasks: BackgroundTasks):
+    """
+    Trigger backup operation with policy parameters.
+    
+    Requires REGISTRY_DEV_MODE=true for iR&D or proper authentication in production.
+    Runs backup asynchronously via background task to avoid HTTP timeout.
+    """
+    job_id = str(uuid.uuid4())
+    logger.info(f"Backup job {job_id} initiated by request: {request.dict()}")
+    
+    # Load policy and merge with request overrides
+    from src.registry.backup import load_backup_policy
+    policy = load_backup_policy()
+    if request.policy_override:
+        policy.update(request.policy_override)
+    
+    # Determine components to backup
+    components = request.components or policy.get("components", ["mlflow_database", "registry_metadata"])
+    
+    if request.dry_run:
+        # Simulate backup without writing files
+        from src.registry.backup import BackupManifest
+        manifest_dict = {
+            "backup_id": job_id,
+            "timestamp": datetime.utcnow().isoformat(),
+            "components": components,
+            "compression": request.compression or "gzip",
+            "status": "dry_run",
+            "checksums": {},
+            "file_size_bytes": 0,
+            "storage_path": None
+        }
+        return BackupResponse(
+            job_id=job_id,
+            status="completed",
+            manifest=manifest_dict,
+            message="Dry-run completed. No files written."
+        )
+    
+    # Execute backup asynchronously
+    background_tasks.add_task(
+        _execute_backup_job,
+        job_id=job_id,
+        components=components,
+        compression=request.compression,
+        encrypt=request.include_encryption,
+        policy=policy
+    )
+    
+    return BackupResponse(
+        job_id=job_id,
+        status="initiated",
+        message=f"Backup job {job_id} started. Check status via GET /backups/{job_id}"
+    )
+
+
+async def _execute_backup_job(
+    job_id: str,
+    components: List[str],
+    compression: str,
+    encrypt: bool,
+    policy: Dict[str, Any]
+):
+    """Background task to execute backup operation"""
+    from datetime import datetime
+    from src.registry.backup import backup_component, get_backup_destination
+    from src.registry.audit import log_audit_event
+    
+    try:
+        checksums = {}
+        total_size = 0
+        
+        # Execute backup for each component
+        for component in components:
+            result = backup_component(
+                component=component,
+                policy=policy,
+                compression=compression,
+                encrypt=encrypt,
+                job_id=job_id
+            )
+            if result and result.get("checksums"):
+                checksums.update(result["checksums"])
+            if result and result.get("size_bytes"):
+                total_size += result["size_bytes"]
+        
+        storage_path = get_backup_destination(job_id, policy)
+        
+        # Log to audit trail
+        log_audit_event(
+            action="backup_completed",
+            model_name=None,
+            version=None,
+            actor="registry_api",
+            metadata={
+                "job_id": job_id, 
+                "components": components, 
+                "size_bytes": total_size,
+                "storage_path": storage_path,
+                "checksums": checksums
+            },
+            status="success"
+        )
+        
+        logger.info(f"Backup job {job_id} completed: {storage_path}")
+        
+    except Exception as e:
+        logger.error(f"Backup job {job_id} failed: {str(e)}")
+        # Log failure to audit trail
+        from src.registry.audit import log_audit_event
+        log_audit_event(
+            action="backup_failed",
+            model_name=None,
+            version=None,
+            actor="registry_api",
+            metadata={"job_id": job_id, "error": str(e)},
+            status="failed"
+        )
