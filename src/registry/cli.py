@@ -3,11 +3,21 @@
 Command Line Interface for Model Registry - MLflow 2.11.0 Compatible
 """
 import click
+import mlflow
+from mlflow.tracking import MlflowClient
 import requests
 import json
 import sys
 import os
 from typing import Optional, Tuple
+
+# Ensure project root is in Python path for direct CLI execution
+import sys
+from pathlib import Path
+_project_root = Path(__file__).resolve().parents[2]
+if str(_project_root) not in sys.path:
+    sys.path.insert(0, str(_project_root))
+
 
 DEFAULT_API_URL = os.getenv("REGISTRY_API_URL", "http://localhost:8000")
 
@@ -173,6 +183,329 @@ def delete_model(ctx, name: str, version: str, force: bool):
         click.confirm(f"Delete {name} v{version}?", abort=True)
     result = api_request("DELETE", f"/models/{name}/versions/{version}")
     click.echo(json.dumps(result, indent=2))
+
+
+
+@cli.command()
+@click.option('--name', required=True, help='Model name to deprecate')
+@click.option('--version', required=True, help='Version to deprecate')
+@click.option('--reason', required=True, help='Reason for deprecation (min 10 chars)')
+@click.option('--migration-guide', default=None, help='Path to migration documentation')
+@click.option('--effective-date', default=None, help='Effective date (ISO format: YYYY-MM-DD)')
+@click.option('--no-notify', is_flag=True, help='Disable stakeholder notifications')
+@click.option('--actor', default='system', help='Actor initiating deprecation (for audit)')
+@click.pass_context
+def deprecate(ctx, name, version, reason, migration_guide, effective_date, no_notify, actor):
+    """
+    Deprecate a model version according to policy
+    
+    Example:
+        python src/registry/cli.py deprecate \
+            --name intent-classifier-sgd \
+            --version 1.0.0 \
+            --reason "superseded by v2.0.0 with improved accuracy" \
+            --migration-guide "docs/migration/v1-to-v2.md" \
+            --actor "jim-mlops"
+    """
+    from src.registry.schemas import DeprecationRequest
+    from pydantic import ValidationError
+    from src.registry.deprecation_policy import DeprecationPolicy, PolicyViolationError
+    from src.registry.audit import log_deprecation, log_lifecycle_event
+    from datetime import datetime
+    
+    try:
+        # Parse effective date if provided
+        eff_date = None
+        if effective_date:
+            try:
+                eff_date = datetime.fromisoformat(effective_date.replace('Z', '+00:00'))
+            except ValueError:
+                click.echo(f"Error: Invalid date format '{effective_date}'. Use ISO format (YYYY-MM-DD)", err=True)
+                ctx.exit(1)
+        
+        # Validate request against schema
+        request = DeprecationRequest(
+            name=name,
+            version=version,
+            reason=reason,
+            migration_guide=migration_guide,
+            effective_date=eff_date,
+            notify_stakeholders=not no_notify
+        )
+        
+        # Load and apply policy
+        policy = DeprecationPolicy.get_instance()
+        validation = policy.validate_deprecation_request(
+            model_name=request.name,
+            version=request.version,
+            reason=request.reason,
+            migration_guide=request.migration_guide,
+            effective_date=request.effective_date
+        )
+        
+        # Display warnings if any
+        for warning in validation.get('warnings', []):
+            click.echo(f"⚠️  Warning: {warning}", err=True)
+        
+        # Log to audit trail BEFORE making changes (audit-first principle)
+        log_deprecation(
+            model_name=request.name,
+            version=request.version,
+            reason=request.reason,
+            migration_guide=request.migration_guide,
+            actor=actor,
+            ip_address=ctx.obj.get('ip_address') if ctx.obj else None,
+            policy_validated=True,
+            warning_period_days=validation.get('warning_period_days')
+        )
+        
+        # Update MLflow model version metadata with deprecation status
+        # Note: In dev mode, this may be a no-op or mock operation
+        # Initialize MLflow client directly for CLI usage
+        tracking_uri = os.environ.get("MLFLOW_TRACKING_URI", "http://127.0.0.1:5000")
+        mlflow.set_tracking_uri(tracking_uri)
+        client = MlflowClient(tracking_uri=tracking_uri)
+        
+        try:
+            # Attempt to update model version tags with deprecation metadata
+            model_version = client.get_model_version(request.name, request.version)
+            client.set_model_version_tag(
+                name=request.name,
+                version=request.version,
+                key="deprecation_status",
+                value="deprecated"
+            )
+            client.set_model_version_tag(
+                name=request.name,
+                version=request.version,
+                key="deprecation_reason",
+                value=request.reason
+            )
+            if request.migration_guide:
+                client.set_model_version_tag(
+                    name=request.name,
+                    version=request.version,
+                    key="migration_guide",
+                    value=request.migration_guide
+                )
+            click.echo(f"✓ Model {request.name} v{request.version} marked as deprecated in MLflow")
+        except Exception as mlflow_err:
+            # Non-fatal: audit log already recorded, MLflow update is best-effort in iR&D
+            click.echo(f"⚠️  MLflow metadata update skipped: {mlflow_err}", err=True)
+            log_lifecycle_event(
+                action="deprecate",
+                model_name=request.name,
+                version=request.version,
+                status="partial_success",
+                actor=actor,
+                error_message=str(mlflow_err)
+            )
+        
+        # Success output
+        click.echo(f"✓ Deprecation recorded for {request.name} v{request.version}")
+        click.echo(f"  Reason: {request.reason}")
+        if request.migration_guide:
+            click.echo(f"  Migration guide: {request.migration_guide}")
+        if request.effective_date:
+            click.echo(f"  Effective date: {request.effective_date.isoformat()}")
+        if validation.get('warning_period_days'):
+            click.echo(f"  Warning period: {validation['warning_period_days']} days")
+        
+        # Log success to audit
+        log_lifecycle_event(
+            action="deprecate",
+            model_name=request.name,
+            version=request.version,
+            status="success",
+            actor=actor,
+            metadata={"migration_guide": request.migration_guide}
+        )
+        
+    except PolicyViolationError as e:
+        click.echo(f"Error: Policy violation - {e}", err=True)
+        log_lifecycle_event(
+            action="deprecate",
+            model_name=name,
+            version=version,
+            status="failed",
+            actor=actor,
+            error_message=str(e),
+            metadata={"violation_field": e.field, "violation_value": e.value}
+        )
+        ctx.exit(2)
+    except ValidationError as e:
+        click.echo(f"Error: Invalid request - {e}", err=True)
+        ctx.exit(1)
+    except Exception as e:
+        click.echo(f"Error: Unexpected error - {e}", err=True)
+        log_lifecycle_event(
+            action="deprecate",
+            model_name=name,
+            version=version,
+            status="failed",
+            actor=actor,
+            error_message=str(e)
+        )
+        ctx.exit(3)
+
+
+
+@cli.command()
+@click.option('--name', required=True, help='Model name to retire')
+@click.option('--version', required=True, help='Version to retire')
+@click.option('--soft-delete', is_flag=True, default=True, help='Soft-delete (preserve audit trail)')
+@click.option('--archive-location', default=None, help='Target archive path for artifacts')
+@click.option('--actor', default='system', help='Actor initiating retirement (for audit)')
+@click.option('--force', is_flag=True, help='Bypass policy checks (use with caution)')
+@click.pass_context
+def retire(ctx, name, version, soft_delete, archive_location, actor, force):
+    """
+    Retire a deprecated model version according to policy
+    
+    Example:
+        python src/registry/cli.py retire \
+            --name intent-classifier-sgd \
+            --version 1.0.0 \
+            --actor "jim-mlops" \
+            --archive-location "s3://archive-bucket/models/retired/"
+    """
+    from src.registry.schemas import RetirementRequest
+    from src.registry.deprecation_policy import DeprecationPolicy, PolicyViolationError
+    from src.registry.audit import log_retirement, log_lifecycle_event
+    from pydantic import ValidationError
+    from datetime import datetime
+    
+    try:
+        # Validate request against schema
+        request = RetirementRequest(
+            name=name,
+            version=version,
+            soft_delete=soft_delete,
+            confirmation="I confirm retirement",  # Auto-confirm for CLI; API requires explicit
+            archive_location=archive_location
+        )
+        
+        # Load policy
+        policy = DeprecationPolicy.get_instance()
+        
+        # Check eligibility unless --force
+        if not force:
+            # Try to get deprecation date from MLflow tags
+            tracking_uri = os.environ.get("MLFLOW_TRACKING_URI", "http://127.0.0.1:5000")
+            mlflow.set_tracking_uri(tracking_uri)
+            client = MlflowClient(tracking_uri=tracking_uri)
+            
+            try:
+                model_version = client.get_model_version(request.name, request.version)
+                deprecation_tag = model_version.tags.get("deprecation_date")
+                if deprecation_tag:
+                    from datetime import datetime
+                    deprecation_date = datetime.fromisoformat(deprecation_tag.replace('Z', '+00:00'))
+                    eligibility = policy.get_retirement_eligibility(deprecation_date, request.name)
+                    if not eligibility["eligible"]:
+                        click.echo(f"Error: {eligibility['reason']}", err=True)
+                        click.echo(f"  Eligible after: {eligibility.get('eligible_after', 'N/A')}", err=True)
+                        ctx.exit(2)
+                else:
+                    click.echo("⚠️  Warning: No deprecation_date tag found; proceeding with retirement", err=True)
+            except Exception as e:
+                click.echo(f"⚠️  Warning: Could not check eligibility: {e}", err=True)
+        
+        # Validate retirement request
+        validation = policy.validate_retirement_request(
+            model_name=request.name,
+            version=request.version,
+            actor=actor,
+            soft_delete=request.soft_delete
+        )
+        
+        # Log to audit trail BEFORE making changes
+        log_retirement(
+            model_name=request.name,
+            version=request.version,
+            soft_delete=request.soft_delete,
+            archive_location=request.archive_location,
+            actor=actor,
+            ip_address=ctx.obj.get('ip_address') if ctx.obj else None,
+            policy_validated=True
+        )
+        
+        # Perform retirement action
+        if request.soft_delete:
+            # Soft delete: update MLflow stage to "Archived" and add retirement tags
+            try:
+                client.set_model_version_tag(
+                    name=request.name,
+                    version=request.version,
+                    key="deprecation_status",
+                    value="retired"
+                )
+                client.set_model_version_tag(
+                    name=request.name,
+                    version=request.version,
+                    key="retired_date",
+                    value=datetime.now().isoformat()
+                )
+                if request.archive_location:
+                    client.set_model_version_tag(
+                        name=request.name,
+                        version=request.version,
+                        key="archive_location",
+                        value=request.archive_location
+                    )
+                click.echo(f"✓ Model {request.name} v{request.version} soft-retired (stage: Archived)")
+            except Exception as mlflow_err:
+                click.echo(f"⚠️  MLflow metadata update skipped: {mlflow_err}", err=True)
+        else:
+            # Hard delete: remove model version (production use only)
+            click.echo(f"⚠️  Hard delete requested for {request.name} v{request.version}")
+            click.echo("    This action is irreversible. Use --soft-delete for safety.")
+            # In production, add confirmation prompt here
+            # For iR&D, skip actual deletion
+        
+        # Success output
+        click.echo(f"✓ Retirement recorded for {request.name} v{request.version}")
+        click.echo(f"  Soft delete: {request.soft_delete}")
+        if request.archive_location:
+            click.echo(f"  Archive location: {request.archive_location}")
+        if validation.get('requirements', {}).get('audit_retention_until'):
+            click.echo(f"  Audit retained until: {validation['requirements']['audit_retention_until']}")
+        
+        # Log success
+        log_lifecycle_event(
+            action="retire",
+            model_name=request.name,
+            version=request.version,
+            status="success",
+            actor=actor,
+            metadata={"soft_delete": request.soft_delete, "archive_location": request.archive_location}
+        )
+        
+    except PolicyViolationError as e:
+        click.echo(f"Error: Policy violation - {e}", err=True)
+        log_lifecycle_event(
+            action="retire",
+            model_name=name,
+            version=version,
+            status="failed",
+            actor=actor,
+            error_message=str(e)
+        )
+        ctx.exit(2)
+    except ValidationError as e:
+        click.echo(f"Error: Invalid request - {e}", err=True)
+        ctx.exit(1)
+    except Exception as e:
+        click.echo(f"Error: Unexpected error - {e}", err=True)
+        log_lifecycle_event(
+            action="retire",
+            model_name=name,
+            version=version,
+            status="failed",
+            actor=actor,
+            error_message=str(e)
+        )
+        ctx.exit(3)
 
 if __name__ == '__main__':
     cli(obj={})

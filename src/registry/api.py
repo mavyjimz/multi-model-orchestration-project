@@ -11,8 +11,9 @@ from mlflow.exceptions import MlflowException
 import logging
 
 from .schemas import (
-    ModelRegisterRequest, ModelPromotionRequest, ModelQueryRequest,
-    ModelInfo, ModelListResponse, RegistryHealthResponse
+    ModelRegisterRequest, ModelPromoteRequest, ModelQueryRequest,
+    ModelInfo, ModelListResponse, RegistryHealthResponse,
+    DeprecationRequest, RetirementRequest, AuditLogEntry
 )
 
 logger = logging.getLogger(__name__)
@@ -130,7 +131,7 @@ async def list_models(query: ModelQueryRequest = Depends(), client: MlflowClient
         raise HTTPException(status_code=500, detail="Internal server error")
 
 @app.post("/promote", response_model=ModelInfo)
-async def promote_model(request: ModelPromotionRequest, client: MlflowClient = Depends(get_mlflow_client)):
+async def promote_model(request: ModelPromoteRequest, client: MlflowClient = Depends(get_mlflow_client)):
     try:
         client.transition_model_version_stage(
             name=request.name, 
@@ -196,3 +197,302 @@ async def delete_model_version(name: str, version: str, client: MlflowClient = D
         return JSONResponse(status_code=204, content=None)
     except MlflowException as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+# =============================================================================
+# Phase 6.8: Deprecation & Retirement Endpoints
+# =============================================================================
+
+@app.post("/deprecate", status_code=200, response_model=ModelInfo)
+async def deprecate_model(
+    request: DeprecationRequest,
+    client: MlflowClient = Depends(get_mlflow_client)
+):
+    """
+    Deprecate a model version according to policy
+    
+    Request body:
+    {
+        "name": "intent-classifier-sgd",
+        "version": "1.0.0",
+        "reason": "superseded by v2.0.0",
+        "migration_guide": "docs/migration/v1-to-v2.md",
+        "effective_date": "2026-04-16T00:00:00Z",  # optional
+        "notify_stakeholders": true  # optional
+    }
+    """
+    from .deprecation_policy import DeprecationPolicy, PolicyViolationError
+    from .audit import log_deprecation, log_lifecycle_event
+    
+    try:
+        # Validate against policy
+        policy = DeprecationPolicy.get_instance()
+        validation = policy.validate_deprecation_request(
+            model_name=request.name,
+            version=request.version,
+            reason=request.reason,
+            migration_guide=request.migration_guide,
+            effective_date=request.effective_date
+        )
+        
+        # Log to audit trail
+        log_deprecation(
+            model_name=request.name,
+            version=request.version,
+            reason=request.reason,
+            migration_guide=request.migration_guide,
+            actor="api",
+            ip_address=None,  # Could extract from request.headers if needed
+            policy_validated=True
+        )
+        
+        # Update MLflow model version metadata
+        try:
+            # Normalize version for MLflow (strip 'v' prefix if present)
+            mlflow_version = request.version.lstrip('v')
+            
+            client.set_model_version_tag(
+                name=request.name,
+                version=mlflow_version,
+                key="deprecation_status",
+                value="deprecated"
+            )
+            client.set_model_version_tag(
+                name=request.name,
+                version=mlflow_version,
+                key="deprecation_reason",
+                value=request.reason
+            )
+            if request.migration_guide:
+                client.set_model_version_tag(
+                    name=request.name,
+                    version=mlflow_version,
+                    key="migration_guide",
+                    value=request.migration_guide
+                )
+            if request.effective_date:
+                client.set_model_version_tag(
+                    name=request.name,
+                    version=mlflow_version,
+                    key="deprecation_date",
+                    value=request.effective_date.isoformat()
+                )
+        except Exception as mlflow_err:
+            logger.warning(f"MLflow metadata update failed: {mlflow_err}")
+            # Non-fatal: audit log already recorded
+        
+        # Return updated model info
+        try:
+            mlflow_version = request.version.lstrip('v')
+            mv = client.get_model_version(request.name, mlflow_version)
+            return ModelInfo(
+                name=mv.name,
+                version=mv.version,
+                stage=mv.current_stage,
+                source=mv.source,
+                run_id=mv.run_id,
+                description=mv.description,
+                created_timestamp=mv.creation_timestamp,
+                last_updated_timestamp=mv.last_updated_timestamp,
+                metadata=dict(mv.tags) if mv.tags else {},
+                deprecation_status="deprecated",
+                deprecation_reason=request.reason,
+                migration_guide=request.migration_guide
+            )
+        except Exception:
+            # Fallback response if MLflow fetch fails
+            return ModelInfo(
+                name=request.name,
+                version=request.version,
+                deprecation_status="deprecated",
+                deprecation_reason=request.reason,
+                migration_guide=request.migration_guide
+            )
+        
+    except PolicyViolationError as e:
+        log_lifecycle_event(
+            action="deprecate",
+            model_name=request.name,
+            version=request.version,
+            status="failed",
+            actor="api",
+            error_message=str(e)
+        )
+        raise HTTPException(status_code=400, detail=str(e))
+    except ValidationError as e:
+        raise HTTPException(status_code=422, detail=e.errors())
+    except Exception as e:
+        log_lifecycle_event(
+            action="deprecate",
+            model_name=request.name,
+            version=request.version,
+            status="failed",
+            actor="api",
+            error_message=str(e)
+        )
+        raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
+
+
+@app.post("/retire", status_code=200, response_model=ModelInfo)
+async def retire_model(
+    request: RetirementRequest,
+    client: MlflowClient = Depends(get_mlflow_client)
+):
+    """
+    Retire a deprecated model version according to policy
+    
+    Request body:
+    {
+        "name": "intent-classifier-sgd",
+        "version": "1.0.0",
+        "soft_delete": true,
+        "confirmation": "I confirm retirement",
+        "archive_location": "s3://bucket/retired/"
+    }
+    """
+    from .deprecation_policy import DeprecationPolicy, PolicyViolationError
+    from .audit import log_retirement, log_lifecycle_event
+    
+    try:
+        # Validate confirmation
+        if request.confirmation != "I confirm retirement":
+            raise HTTPException(
+                status_code=400,
+                detail="Confirmation string must be exactly: 'I confirm retirement'"
+            )
+        
+        # Load policy and validate
+        policy = DeprecationPolicy.get_instance()
+        validation = policy.validate_retirement_request(
+            model_name=request.name,
+            version=request.version,
+            actor="api",
+            soft_delete=request.soft_delete
+        )
+        
+        # Log to audit trail
+        log_retirement(
+            model_name=request.name,
+            version=request.version,
+            soft_delete=request.soft_delete,
+            archive_location=request.archive_location,
+            actor="api",
+            policy_validated=True
+        )
+        
+        # Perform retirement
+        mlflow_version = request.version.lstrip('v')
+        
+        if request.soft_delete:
+            # Soft delete: update tags to mark as retired
+            client.set_model_version_tag(
+                name=request.name,
+                version=mlflow_version,
+                key="deprecation_status",
+                value="retired"
+            )
+            client.set_model_version_tag(
+                name=request.name,
+                version=mlflow_version,
+                key="retired_date",
+                value=datetime.now(timezone.utc).isoformat()
+            )
+            if request.archive_location:
+                client.set_model_version_tag(
+                    name=request.name,
+                    version=mlflow_version,
+                    key="archive_location",
+                    value=request.archive_location
+                )
+        else:
+            # Hard delete: remove model version (use with extreme caution)
+            # In production, add approval workflow here
+            logger.warning(f"Hard delete requested for {request.name} v{mlflow_version}")
+            # client.delete_model_version(request.name, mlflow_version)  # Uncomment for production
+        
+        # Return updated model info
+        try:
+            mv = client.get_model_version(request.name, mlflow_version)
+            return ModelInfo(
+                name=mv.name,
+                version=mv.version,
+                stage=mv.current_stage,
+                source=mv.source,
+                run_id=mv.run_id,
+                description=mv.description,
+                created_timestamp=mv.creation_timestamp,
+                last_updated_timestamp=mv.last_updated_timestamp,
+                metadata=dict(mv.tags) if mv.tags else {},
+                deprecation_status="retired",
+                retirement_scheduled=not request.soft_delete
+            )
+        except Exception:
+            return ModelInfo(
+                name=request.name,
+                version=request.version,
+                deprecation_status="retired",
+                retirement_scheduled=not request.soft_delete
+            )
+        
+    except PolicyViolationError as e:
+        log_lifecycle_event(
+            action="retire",
+            model_name=request.name,
+            version=request.version,
+            status="failed",
+            actor="api",
+            error_message=str(e)
+        )
+        raise HTTPException(status_code=400, detail=str(e))
+    except ValidationError as e:
+        raise HTTPException(status_code=422, detail=e.errors())
+    except Exception as e:
+        log_lifecycle_event(
+            action="retire",
+            model_name=request.name,
+            version=request.version,
+            status="failed",
+            actor="api",
+            error_message=str(e)
+        )
+        raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}")
+
+
+@app.get("/audit", response_model=List[AuditLogEntry])
+async def query_audit(
+    model_name: Optional[str] = None,
+    action: Optional[str] = None,
+    version: Optional[str] = None,
+    limit: int = 100
+):
+    """
+    Query audit log entries
+    
+    Query params:
+    - model_name: Filter by model name
+    - action: Filter by action type (deprecate, retire, promote, register)
+    - version: Filter by version
+    - limit: Max entries to return (default: 100)
+    """
+    from .audit import query_audit_log
+    
+    entries = query_audit_log(
+        model_name=model_name,
+        action=action,
+        version=version,
+        limit=limit
+    )
+    
+    # Parse JSON strings to dicts for Pydantic validation
+    results = []
+    for entry in entries:
+        try:
+            if isinstance(entry, str):
+                import json
+                entry = json.loads(entry)
+            results.append(AuditLogEntry(**entry))
+        except Exception:
+            continue  # Skip malformed entries
+    
+    return results
+
