@@ -1,49 +1,62 @@
 """
-Pydantic schemas for Model Registry API
+Pydantic schemas for Model Registry API - MLflow 2.11.0 Compatible
+Minimal, working version with relaxed validation
 """
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List, Literal
 from datetime import datetime
+import re
 
-# Valid stage transitions
 VALID_STAGES = Literal["None", "Staging", "Production", "Archived"]
 
 class ModelRegisterRequest(BaseModel):
     """Request schema for registering a new model version"""
-    name: str = Field(..., min_length=1, description="Model name")
-    version: str = Field(..., pattern=r'^\d+\.\d+\.\d+.*$', description="Semantic version")
+    name: str = Field(..., min_length=1, max_length=255)
+    version: str = Field(..., description="Version: integer or semver")
     description: Optional[str] = Field(default="", max_length=500)
-    source_path: str = Field(..., description="MLflow run URI or artifact path")
-    run_id: Optional[str] = Field(default=None, description="Associated MLflow run ID")
-    metadata: Optional[dict] = Field(default_factory=dict, description="Custom metadata")
-
+    source_path: str = Field(...)
+    run_id: Optional[str] = Field(default=None)
+    metadata: Optional[dict] = Field(default_factory=dict)
+    
     @field_validator('name')
     @classmethod
     def validate_name(cls, v):
-        if not v.replace('-', '_').replace('.', '').isalnum():
-            raise ValueError('Name must contain only alphanumeric, hyphens, underscores, or dots')
+        if not re.match(r'^[a-zA-Z0-9._-]+$', v):
+            raise ValueError('Name: alphanumeric, hyphens, underscores, or dots only')
         return v
+    
+    @field_validator('version')
+    @classmethod
+    def validate_version(cls, v):
+        # Accept integer OR semver
+        if v.isdigit() or re.match(r'^\d+(\.\d+)*.*$', v):
+            return v
+        raise ValueError('Version must be integer (2) or semver (1.2.0)')
 
 class ModelPromotionRequest(BaseModel):
-    """Request schema for promoting a model to a new stage"""
-    name: str = Field(..., description="Model name")
-    version: str = Field(..., description="Model version")
-    stage: VALID_STAGES = Field(..., description="Target stage")
-    comment: Optional[str] = Field(default=None, description="Promotion rationale")
+    name: str = Field(...)
+    version: str = Field(...)
+    stage: VALID_STAGES = Field(...)
+    comment: Optional[str] = Field(default=None)
+    
+    @field_validator('version')
+    @classmethod
+    def validate_version(cls, v):
+        if v.isdigit() or re.match(r'^\d+(\.\d+)*.*$', v):
+            return v
+        raise ValueError('Version must be integer or semver')
 
 class ModelQueryRequest(BaseModel):
-    """Request schema for querying models"""
-    name: Optional[str] = Field(default=None, description="Filter by model name")
-    stage: Optional[VALID_STAGES] = Field(default=None, description="Filter by stage")
-    min_version: Optional[str] = Field(default=None, description="Minimum version filter")
-    limit: int = Field(default=50, ge=1, le=200, description="Max results to return")
+    name: Optional[str] = Field(default=None)
+    stage: Optional[VALID_STAGES] = Field(default=None)
+    min_version: Optional[str] = Field(default=None)
+    limit: int = Field(default=50, ge=1, le=200)
 
 class ModelInfo(BaseModel):
-    """Response schema for model information"""
     name: str
     version: str
     stage: VALID_STAGES
-    status: str  # READY, FAILED, PENDING
+    status: str
     creation_time: Optional[datetime] = None
     last_updated: Optional[datetime] = None
     description: Optional[str] = None
@@ -53,14 +66,12 @@ class ModelInfo(BaseModel):
     metrics_summary: Optional[dict] = None
 
 class ModelListResponse(BaseModel):
-    """Response schema for listing models"""
     models: List[ModelInfo]
     total: int
     page: int = 1
     limit: int
 
 class RegistryHealthResponse(BaseModel):
-    """Health check response"""
     status: str
     service: str
     mlflow_connected: bool
