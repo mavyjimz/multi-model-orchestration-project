@@ -1,0 +1,30 @@
+{
+  "phase": "6.1",
+  "timestamp": "2026-03-17T09:43:40.369525",
+  "mlflow_tracking_uri": "file:/home/vanjunn-pongasi/MLOps/multi-model-orchestration-project/mlruns",
+  "experiment_name": "multi-model-orchestration",
+  "model_name": "intent-classifier-sgd",
+  "validation_passed": true,
+  "checks": [
+    [
+      "Tracking URI accessible",
+      true
+    ],
+    [
+      "Experiment created",
+      true
+    ],
+    [
+      "Model registered",
+      true
+    ],
+    [
+      "Schema config generated",
+      true
+    ],
+    [
+      "MLflow data directory populated",
+      true
+    ]
+  ]
+}

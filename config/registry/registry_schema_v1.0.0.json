@@ -1,0 +1,49 @@
+{
+  "registry_schema_version": "1.0.0",
+  "model_requirements": {
+    "required_metadata_fields": [
+      "model_type",
+      "framework",
+      "accuracy",
+      "latency_p95",
+      "training_data_version",
+      "git_commit",
+      "intent_classes"
+    ],
+    "promotion_gates": {
+      "development_to_staging": {
+        "min_accuracy": 0.7,
+        "max_latency_ms": 100,
+        "required_tests": [
+          "unit",
+          "integration"
+        ]
+      },
+      "staging_to_production": {
+        "min_accuracy": 0.75,
+        "max_latency_ms": 50,
+        "required_tests": [
+          "unit",
+          "integration",
+          "load",
+          "drift"
+        ]
+      }
+    },
+    "retention_policy": {
+      "development_days": 30,
+      "staging_days": 90,
+      "production_days": 365,
+      "archived_retention": "indefinite"
+    }
+  },
+  "artifact_storage": {
+    "local_path": "/home/vanjunn-pongasi/MLOps/multi-model-orchestration-project/artifacts",
+    "s3_ready_structure": "s3://bucket-name/models/{model_name}/{version}/",
+    "supported_formats": [
+      "joblib",
+      "onnx",
+      "pickle"
+    ]
+  }
+}
