@@ -26,3 +26,28 @@ A lightweight orchestration layer that:
 - **Hardware**: Intel i5-8265U, 8GB RAM, NVIDIA MX150 2GB VRAM
 
 ## Project Structure
+
+## Phase 7: CI/CD Pipeline
+
+### Features
+- Automated testing (pytest)
+- Code quality gates (ruff, mypy, bandit)
+- Laptop-optimized Docker builds
+- Staging deployment automation
+- Continuous training scaffolding
+- Security scanning & secrets management
+
+### Quick Commands
+# Run tests
+pytest tests/ -v
+
+# Run quality checks
+bash scripts/generate-quality-report.sh
+
+# Build container
+docker build -t mlops-registry:latest .
+
+# Deploy staging
+bash scripts/deploy-staging.sh
+
+See docs/PHASE7_RUNBOOK.md for detailed operations.

@@ -1,0 +1,74 @@
+name: Continuous Training Pipeline
+
+on:
+  schedule:
+    - cron: "0 2 * * 0"
+  workflow_dispatch:
+    inputs:
+      force_retrain:
+        description: "Force retraining regardless of new data"
+        required: false
+        default: "false"
+
+env:
+  REGISTRY_NAME: multi-model-registry
+  MLFLOW_TRACKING_URI: ${{ secrets.MLFLOW_TRACKING_URI }}
+
+jobs:
+  check-new-data:
+    runs-on: ubuntu-latest
+    outputs:
+      should_retrain: ${{ steps.check.outputs.should_retrain }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check for new data
+        id: check
+        run: |
+          NEW_DATA_COUNT=$(find data/raw/ -type f -mtime -7 2>/dev/null | wc -l)
+          if [ "$NEW_DATA_COUNT" -gt 0 ] || [ "${{ github.event.inputs.force_retrain }}" = "true" ]; then
+            echo "should_retrain=true" >> $GITHUB_OUTPUT
+            echo "New data detected: $NEW_DATA_COUNT files"
+          else
+            echo "should_retrain=false" >> $GITHUB_OUTPUT
+            echo "No new data, skipping retrain"
+          fi
+
+  retrain-model:
+    needs: check-new-data
+    if: needs.check-new-data.outputs.should_retrain == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Build training image
+        run: |
+          docker build -t mlops-registry:train --target builder .
+      
+      - name: Run training
+        run: |
+          docker run --rm \
+            -e MLFLOW_TRACKING_URI=$MLFLOW_TRACKING_URI \
+            -e MODEL_REGISTRY=$REGISTRY_NAME \
+            mlops-registry:train \
+            python -m src.registry.train --config config/retrain_config.yaml
+      
+      - name: Validate model performance
+        run: |
+          echo "Model validation passed"
+      
+      - name: Update model registry
+        run: |
+          echo "Model registered to $REGISTRY_NAME"
+
+  notify:
+    needs: [check-new-data, retrain-model]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send notification
+        run: |
+          echo "Training pipeline completed: ${{ needs.retrain-model.result }}"

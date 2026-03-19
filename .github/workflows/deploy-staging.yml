@@ -1,0 +1,45 @@
+name: Deploy to Staging
+
+on:
+  workflow_run:
+    workflows: ["CI/CD Pipeline"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    environment:
+      name: staging
+      url: https://staging.example.com
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy to staging server
+        run: |
+          echo "Deploying to staging environment..."
+          echo "Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+          echo "✅ Deployment placeholder - add actual commands in secrets"
+
+      - name: Post-deployment health check
+        run: |
+          HEALTH_URL="https://staging.example.com/health"
+          MAX_RETRIES=10
+          for i in $(seq 1 $MAX_RETRIES); do
+            if curl -sf "$HEALTH_URL" > /dev/null; then
+              echo "✅ Staging service is healthy"
+              exit 0
+            fi
+            echo "Health check attempt $i/$MAX_RETRIES..."
+            sleep 5
+          done
+          echo "❌ Health check failed"
+          exit 1
