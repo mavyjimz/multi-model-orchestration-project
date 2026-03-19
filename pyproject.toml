@@ -40,3 +40,11 @@ exclude_lines = [
     "if __name__ == .__main__.:",
 ]
 show_missing = true
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+explicit_package_bases = true
+disable_error_code = ["import-untyped", "valid-type", "var-annotated", "no-any-return", "assignment", "call-arg", "attr-defined"]
+allow_untyped_defs = true
+allow_untyped_calls = true

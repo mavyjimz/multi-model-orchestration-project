@@ -20,7 +20,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
-          pip install pytest-cov
+          pip install pytest-cov ruff
       
       - name: Run tests with coverage
         run: |
