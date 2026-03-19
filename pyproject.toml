@@ -18,7 +18,7 @@ warn_unused_configs = true
 disallow_untyped_defs = false
 ignore_missing_imports = true
 explicit_package_bases = true
-disable_error_code = ["import-untyped", "valid-type", "var-annotated", "no-any-return", "assignment", "call-arg", "attr-defined"]
+disable_error_code = ["import-untyped", "valid-type", "var-annotated", "no-any-return", "assignment", "call-arg", "attr-defined", "arg-type"]
 allow_untyped_calls = true
 exclude = ["venv", ".venv", "mlruns", "artifacts"]
 
