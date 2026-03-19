@@ -4,7 +4,6 @@ FastAPI application for Model Registry - MLflow 2.11.0 Compatible
 
 import logging
 from datetime import datetime, timezone
-from typing import Any
 
 import mlflow
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, status
