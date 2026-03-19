@@ -54,7 +54,6 @@ async def health_check() -> RegistryHealthResponse:
         mlflow_connected=mlflow_ok,
         timestamp=datetime.now(UTC).isoformat(),
         service="registry",
-        service="registry",
     )
 
 
