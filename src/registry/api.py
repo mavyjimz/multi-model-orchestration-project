@@ -3,7 +3,7 @@ FastAPI application for Model Registry - MLflow 2.11.0 Compatible
 """
 
 import logging
-from datetime import datetime, timezone, timezone
+from datetime import datetime, timezone
 from typing import Any
 
 import mlflow
@@ -14,7 +14,6 @@ from mlflow.tracking import MlflowClient
 from pydantic import ValidationError
 
 from .schemas import (
-from .deprecation_policy import DeprecationPolicy
     AuditLogEntry,
     BackupRequest,
     BackupResponse,
@@ -27,6 +26,7 @@ from .deprecation_policy import DeprecationPolicy
     RegistryHealthResponse,
     RetirementRequest,
 )
+from .deprecation_policy import DeprecationPolicy
 
 from .audit import log_lifecycle_event
 

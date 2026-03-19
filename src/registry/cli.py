@@ -270,7 +270,7 @@ def deprecate(ctx, name, version, reason, migration_guide, effective_date, no_no
 
         try:
             # Attempt to update model version tags with deprecation metadata
-            client.get_model_version(request.name, request.version)
+            model_version = client.get_model_version(request.name, request.version)
             client.set_model_version_tag(
                 name=request.name,
                 version=request.version,
@@ -400,7 +400,7 @@ def retire(ctx, name, version, soft_delete, archive_location, actor, force):
             client = MlflowClient(tracking_uri=tracking_uri)
 
             try:
-                client.get_model_version(request.name, request.version)
+                model_version = client.get_model_version(request.name, request.version)
                 deprecation_tag = model_version.tags.get("deprecation_date")
                 if deprecation_tag:
                     from datetime import datetime
