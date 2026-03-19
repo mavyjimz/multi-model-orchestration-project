@@ -39,7 +39,7 @@ jobs:
         run: ruff format src/ tests/ --check
 
       - name: Run MyPy (type checking)
-        run: mypy src/ --ignore-missing-imports --no-error-summary
+        run: mypy src/ --explicit-package-bases --ignore-missing-imports --no-error-summary
 
       - name: Run Bandit (security scan)
         run: bandit -r src/ -f json -o bandit-report.json || true
