@@ -3,6 +3,7 @@ Deprecation Policy Loader and Validator
 Phase 6.8: Model Deprecation & Retirement Policy
 Reads: config/deprecation_policy.yaml
 """
+
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Optional
@@ -13,6 +14,7 @@ from pydantic import BaseModel, Field, ValidationError
 
 class DeprecationPolicyConfig(BaseModel):
     """Pydantic model for deprecation policy configuration"""
+
     version: str
     environment: str = "development"
 
@@ -38,6 +40,7 @@ class DeprecationPolicyConfig(BaseModel):
 
 class PolicyViolationError(Exception):
     """Raised when a deprecation/retirement request violates policy"""
+
     def __init__(self, message: str, field: str | None = None, value: Any = None):
         self.field = field
         self.value = value
@@ -69,7 +72,7 @@ class DeprecationPolicy:
             # Return default policy if config file missing (iR&D fallback)
             return cls(DeprecationPolicyConfig(version="0.1.0", environment="development"))
 
-        with open(path, encoding='utf-8') as f:
+        with open(path, encoding="utf-8") as f:
             raw_config = yaml.safe_load(f)
 
         try:
@@ -99,7 +102,7 @@ class DeprecationPolicy:
         version: str,
         reason: str,
         migration_guide: str | None = None,
-        effective_date: datetime | None = None
+        effective_date: datetime | None = None,
     ) -> dict[str, Any]:
         """
         Validate a deprecation request against policy rules
@@ -118,7 +121,7 @@ class DeprecationPolicy:
                 raise PolicyViolationError(
                     f"Reason '{reason}' not in allowed reasons: {self.config.deprecation.allowed_reasons}",
                     field="reason",
-                    value=reason
+                    value=reason,
                 )
 
         # Rule 2: Migration guide required if policy enforces
@@ -126,7 +129,7 @@ class DeprecationPolicy:
             raise PolicyViolationError(
                 "Migration guide is required by policy but not provided",
                 field="migration_guide",
-                value=None
+                value=None,
             )
 
         # Rule 3: Effective date must be in future (if provided)
@@ -135,7 +138,9 @@ class DeprecationPolicy:
 
         # Rule 4: Warning period calculation
         if effective_date:
-            warning_end = effective_date + timedelta(days=self.config.deprecation.warning_period_days)
+            warning_end = effective_date + timedelta(
+                days=self.config.deprecation.warning_period_days
+            )
             warnings.append(
                 f"Deprecation warning period: {datetime.now().date()} to {warning_end.date()} "
                 f"({self.config.deprecation.warning_period_days} days)"
@@ -145,15 +150,11 @@ class DeprecationPolicy:
             "valid": True,
             "warnings": warnings,
             "warning_period_days": self.config.deprecation.warning_period_days,
-            "requires_migration_guide": self.config.deprecation.require_migration_guide
+            "requires_migration_guide": self.config.deprecation.require_migration_guide,
         }
 
     def validate_retirement_request(
-        self,
-        model_name: str,
-        version: str,
-        actor: str,
-        soft_delete: bool | None = None
+        self, model_name: str, version: str, actor: str, soft_delete: bool | None = None
     ) -> dict[str, Any]:
         """
         Validate a retirement request against policy rules
@@ -179,32 +180,30 @@ class DeprecationPolicy:
                     f"Actor '{actor}' not authorized for retirement. "
                     f"Allowed: {self.config.retirement.allowed_approvers}",
                     field="actor",
-                    value=actor
+                    value=actor,
                 )
             requirements["approval_status"] = "pending"
 
         # Rule 3: Audit retention period
         requirements["audit_retention_until"] = (
-            datetime.now() + timedelta(days=self.config.retirement.audit_retention_days)
-        ).date().isoformat()
+            (datetime.now() + timedelta(days=self.config.retirement.audit_retention_days))
+            .date()
+            .isoformat()
+        )
 
         return {
             "valid": True,
             "requirements": requirements,
-            "audit_retention_days": self.config.retirement.audit_retention_days
+            "audit_retention_days": self.config.retirement.audit_retention_days,
         }
 
     def is_model_deprecated(self, deprecation_date: datetime) -> bool:
         """Check if a model's deprecation warning period has elapsed"""
-        warning_end = deprecation_date + timedelta(
-            days=self.config.deprecation.warning_period_days
-        )
+        warning_end = deprecation_date + timedelta(days=self.config.deprecation.warning_period_days)
         return datetime.now() > warning_end
 
     def get_retirement_eligibility(
-        self,
-        deprecation_date: datetime,
-        model_name: str
+        self, deprecation_date: datetime, model_name: str
     ) -> dict[str, Any]:
         """
         Determine if a deprecated model is eligible for retirement
@@ -212,9 +211,7 @@ class DeprecationPolicy:
         Returns:
             Dict with eligibility status and timeline info
         """
-        warning_end = deprecation_date + timedelta(
-            days=self.config.deprecation.warning_period_days
-        )
+        warning_end = deprecation_date + timedelta(days=self.config.deprecation.warning_period_days)
         now = datetime.now()
 
         if now < warning_end:
@@ -222,12 +219,12 @@ class DeprecationPolicy:
             return {
                 "eligible": False,
                 "reason": f"Warning period not elapsed ({days_remaining} days remaining)",
-                "eligible_after": warning_end.isoformat()
+                "eligible_after": warning_end.isoformat(),
             }
 
         return {
             "eligible": True,
             "reason": "Warning period elapsed",
             "deprecated_since": deprecation_date.isoformat(),
-            "warning_period_days": self.config.deprecation.warning_period_days
+            "warning_period_days": self.config.deprecation.warning_period_days,
         }

@@ -3,6 +3,7 @@ Audit logging utility for Model Registry
 Phase 6.8: Deprecation & Retirement Policy
 Logs to: logs/audit/deprecation.log (JSON structured)
 """
+
 import json
 import logging
 from datetime import UTC, datetime
@@ -20,10 +21,11 @@ audit_logger.setLevel(logging.INFO)
 # Prevent duplicate handlers if module reloaded
 if not audit_logger.handlers:
     log_file = AUDIT_LOG_DIR / "deprecation.log"
-    file_handler = logging.FileHandler(log_file, mode='a', encoding='utf-8')
+    file_handler = logging.FileHandler(log_file, mode="a", encoding="utf-8")
 
     class JSONFormatter(logging.Formatter):
         """Custom formatter for structured JSON audit logs"""
+
         def format(self, record: logging.LogRecord) -> str:
             log_entry = {
                 "timestamp": datetime.now(UTC).isoformat(),
@@ -50,7 +52,7 @@ def log_deprecation(
     actor: str = "system",
     migration_guide: str | None = None,
     ip_address: str | None = None,
-    **extra_metadata
+    **extra_metadata,
 ) -> None:
     """Log a deprecation event with structured fields"""
     audit_logger.info(
@@ -62,13 +64,9 @@ def log_deprecation(
             "model_name": model_name,
             "version": version,
             "actor": actor,
-            "metadata": {
-                "reason": reason,
-                "migration_guide": migration_guide,
-                **extra_metadata
-            },
+            "metadata": {"reason": reason, "migration_guide": migration_guide, **extra_metadata},
             "ip_address": ip_address,
-        }
+        },
     )
 
 
@@ -79,7 +77,7 @@ def log_retirement(
     actor: str = "system",
     archive_location: str | None = None,
     ip_address: str | None = None,
-    **extra_metadata
+    **extra_metadata,
 ) -> None:
     """Log a retirement event with structured fields"""
     audit_logger.info(
@@ -95,10 +93,10 @@ def log_retirement(
             "metadata": {
                 "soft_delete": soft_delete,
                 "archive_location": archive_location,
-                **extra_metadata
+                **extra_metadata,
             },
             "ip_address": ip_address,
-        }
+        },
     )
 
 
@@ -110,7 +108,7 @@ def log_lifecycle_event(
     actor: str = "system",
     metadata: dict[str, Any] | None = None,
     ip_address: str | None = None,
-    error_message: str | None = None
+    error_message: str | None = None,
 ) -> None:
     """Generic lifecycle event logger for extendability"""
     level = logging.INFO if status == "success" else logging.ERROR
@@ -130,7 +128,7 @@ def log_lifecycle_event(
             "ip_address": ip_address,
             "status": status,
             "error_message": error_message,
-        }
+        },
     )
 
 
@@ -140,7 +138,7 @@ def query_audit_log(
     version: str | None = None,
     start_date: str | None = None,
     end_date: str | None = None,
-    limit: int = 100
+    limit: int = 100,
 ) -> list[dict[str, Any]]:
     """Query audit log entries from JSONL file"""
     results = []
@@ -149,22 +147,22 @@ def query_audit_log(
     if not log_file.exists():
         return results
 
-    with open(log_file, encoding='utf-8') as f:
+    with open(log_file, encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if not line:
                 continue
             try:
                 entry = json.loads(line)
-                if model_name and entry.get('model_name') != model_name:
+                if model_name and entry.get("model_name") != model_name:
                     continue
-                if action and entry.get('action') != action:
+                if action and entry.get("action") != action:
                     continue
-                if version and entry.get('version') != version:
+                if version and entry.get("version") != version:
                     continue
-                if start_date and entry.get('timestamp', '') < start_date:
+                if start_date and entry.get("timestamp", "") < start_date:
                     continue
-                if end_date and entry.get('timestamp', '') > end_date:
+                if end_date and entry.get("timestamp", "") > end_date:
                     continue
                 results.append(entry)
                 if len(results) >= limit:

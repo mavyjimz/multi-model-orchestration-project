@@ -4,6 +4,7 @@ from src.registry.api import app
 
 client = TestClient(app)
 
+
 def test_health_check_endpoint():
     """Test /health endpoint returns valid response"""
     response = client.get("/health")
@@ -12,6 +13,7 @@ def test_health_check_endpoint():
     assert "status" in data
     assert "service" in data
     assert data["service"] == "model-registry"
+
 
 def test_health_response_schema():
     """Test health response matches RegistryHealthResponse schema"""

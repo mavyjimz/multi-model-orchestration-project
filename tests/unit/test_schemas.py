@@ -16,15 +16,17 @@ def test_model_register_request_valid():
         version="1.0.0",
         source="/tmp/model",
         run_id="run-123",
-        description="Test"
+        description="Test",
     )
     assert req.name == "test-model"
     assert req.version == "1.0.0"
+
 
 def test_model_register_request_missing_fields():
     """Test ModelRegisterRequest validation on missing required fields"""
     with pytest.raises(ValidationError):
         ModelRegisterRequest(name="test")
+
 
 def test_registry_health_response():
     """Test RegistryHealthResponse schema"""
@@ -32,7 +34,7 @@ def test_registry_health_response():
         status="healthy",
         service="model-registry",
         mlflow_connected=True,
-        timestamp=datetime.utcnow()
+        timestamp=datetime.utcnow(),
     )
     assert response.status == "healthy"
     assert response.mlflow_connected is True

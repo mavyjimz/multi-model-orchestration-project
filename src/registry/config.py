@@ -1,6 +1,7 @@
 """
 Registry module configuration - iR&D Dev Mode Support
 """
+
 import os
 from pathlib import Path
 
@@ -20,6 +21,7 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 ARTIFACT_ROOT = PROJECT_ROOT / "artifacts"
 DB_PATH = PROJECT_ROOT / "mlflow.db"
 
+
 def get_mlflow_tracking_uri() -> str:
     """Return MLflow tracking URI with proper resolution"""
     uri = MLFLOW_TRACKING_URI
@@ -29,6 +31,7 @@ def get_mlflow_tracking_uri() -> str:
             db_path = PROJECT_ROOT / db_path
             uri = f"sqlite:///{db_path}"
     return uri
+
 
 def is_dev_mode() -> bool:
     """Check if dev mode is enabled"""

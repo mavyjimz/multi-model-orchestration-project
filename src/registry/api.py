@@ -53,7 +53,7 @@ async def health_check() -> RegistryHealthResponse:
         status="healthy" if mlflow_ok else "degraded",
         mlflow_connected=mlflow_ok,
         timestamp=datetime.now(UTC).isoformat(),
-        service="registry",
+        service="model-registry",
     )
 
 
@@ -61,29 +61,26 @@ mlflow_client = get_mlflow_client()
 
 
 @app.post("/register", response_model=ModelInfo, status_code=status.HTTP_201_CREATED)
-async def register_model(request: ModelRegisterRequest, client: MlflowClient = Depends(get_mlflow_client)):
+async def register_model(
+    request: ModelRegisterRequest, client: MlflowClient = Depends(get_mlflow_client)
+):
     """Register a new model version."""
     try:
         client.create_registered_model(request.name)
 
         mv = client.create_model_version(
-            name=request.name,
-            source=request.source,
-            run_id=request.run_id
+            name=request.name, source=request.source, run_id=request.run_id
         )
 
         client.set_model_version_tag(
             name=request.name,
             version=mv.version,
             key="registered_date",
-            value=datetime.now(UTC).isoformat()
+            value=datetime.now(UTC).isoformat(),
         )
 
         log_lifecycle_event(
-            model_name=request.name,
-            version=mv.version,
-            event="registered",
-            user="system"
+            model_name=request.name, version=mv.version, event="registered", user="system"
         )
 
         return ModelInfo(
@@ -92,7 +89,7 @@ async def register_model(request: ModelRegisterRequest, client: MlflowClient = D
             stage=mv.current_stage,
             run_id=mv.run_id,
             source=mv.source,
-            status=mv.status
+            status=mv.status,
         )
     except MlflowException as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
@@ -102,7 +99,9 @@ async def register_model(request: ModelRegisterRequest, client: MlflowClient = D
 
 
 @app.get("/models", response_model=ModelListResponse)
-async def list_models(query: ModelQueryRequest = Depends(), client: MlflowClient = Depends(get_mlflow_client)):
+async def list_models(
+    query: ModelQueryRequest = Depends(), client: MlflowClient = Depends(get_mlflow_client)
+):
     """List registered models."""
     try:
         filter_str = f"name = '{query.name}'" if query.name else None
@@ -118,15 +117,17 @@ async def list_models(query: ModelQueryRequest = Depends(), client: MlflowClient
                     metrics = dict(run.data.metrics)
                 except Exception:
                     pass
-            infos.append(ModelInfo(
-                name=model.name,
-                version=latest[0].version if latest else "0",
-                stage=latest[0].current_stage if latest else "None",
-                run_id=latest[0].run_id if latest else None,
-                source=latest[0].source if latest else None,
-                status="READY",
-                metrics=metrics
-            ))
+            infos.append(
+                ModelInfo(
+                    name=model.name,
+                    version=latest[0].version if latest else "0",
+                    stage=latest[0].current_stage if latest else "None",
+                    run_id=latest[0].run_id if latest else None,
+                    source=latest[0].source if latest else None,
+                    status="READY",
+                    metrics=metrics,
+                )
+            )
 
         return ModelListResponse(models=infos, total=len(infos), page=1, limit=query.limit)
     except MlflowException as e:
@@ -137,13 +138,13 @@ async def list_models(query: ModelQueryRequest = Depends(), client: MlflowClient
 
 
 @app.post("/promote", response_model=ModelInfo)
-async def promote_model(request: ModelPromoteRequest, client: MlflowClient = Depends(get_mlflow_client)):
+async def promote_model(
+    request: ModelPromoteRequest, client: MlflowClient = Depends(get_mlflow_client)
+):
     """Promote model to new stage."""
     try:
         client.transition_model_version_stage(
-            name=request.name,
-            version=request.version,
-            stage=request.stage
+            name=request.name, version=request.version, stage=request.stage
         )
 
         mv = client.get_model_version(request.name, request.version)
@@ -153,7 +154,7 @@ async def promote_model(request: ModelPromoteRequest, client: MlflowClient = Dep
             version=request.version,
             event="promoted",
             user="system",
-            new_stage=request.stage
+            new_stage=request.stage,
         )
 
         return ModelInfo(
@@ -162,7 +163,7 @@ async def promote_model(request: ModelPromoteRequest, client: MlflowClient = Dep
             stage=mv.current_stage,
             run_id=mv.run_id,
             source=mv.source,
-            status=mv.status
+            status=mv.status,
         )
     except MlflowException as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
@@ -172,7 +173,9 @@ async def promote_model(request: ModelPromoteRequest, client: MlflowClient = Dep
 
 
 @app.get("/models/{name}/versions/{version}", response_model=ModelInfo)
-async def get_model_version(name: str, version: str, client: MlflowClient = Depends(get_mlflow_client)):
+async def get_model_version(
+    name: str, version: str, client: MlflowClient = Depends(get_mlflow_client)
+):
     """Get specific model version."""
     try:
         mv = client.get_model_version(name, version)
@@ -192,25 +195,22 @@ async def get_model_version(name: str, version: str, client: MlflowClient = Depe
             run_id=mv.run_id,
             source=mv.source,
             status=mv.status,
-            metrics=metrics
+            metrics=metrics,
         )
     except MlflowException as e:
         raise HTTPException(status_code=404, detail=str(e)) from e
 
 
 @app.delete("/models/{name}/versions/{version}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_model_version(name: str, version: str, client: MlflowClient = Depends(get_mlflow_client)):
+async def delete_model_version(
+    name: str, version: str, client: MlflowClient = Depends(get_mlflow_client)
+):
     """Delete model version."""
     try:
         mv = client.get_model_version(name, version)
         client.delete_model_version(name, version)
 
-        log_lifecycle_event(
-            model_name=name,
-            version=version,
-            event="deleted",
-            user="system"
-        )
+        log_lifecycle_event(model_name=name, version=version, event="deleted", user="system")
 
         return JSONResponse(status_code=204, content=None)
     except MlflowException as e:
@@ -219,8 +219,7 @@ async def delete_model_version(name: str, version: str, client: MlflowClient = D
 
 @app.post("/deprecate")
 async def deprecate_model(
-    request: DeprecationRequest,
-    client: MlflowClient = Depends(get_mlflow_client)
+    request: DeprecationRequest, client: MlflowClient = Depends(get_mlflow_client)
 ):
     """
     Deprecate a model version according to policy
@@ -235,23 +234,18 @@ async def deprecate_model(
     try:
         policy = DeprecationPolicy.get_instance()
         policy.validate_deprecation_request(
-            model_name=request.name,
-            version=request.version,
-            reason=request.reason
+            model_name=request.name, version=request.version, reason=request.reason
         )
 
         client.set_model_version_tag(
-            name=request.name,
-            version=request.version,
-            key="deprecated",
-            value="true"
+            name=request.name, version=request.version, key="deprecated", value="true"
         )
 
         client.set_model_version_tag(
             name=request.name,
             version=request.version,
             key="deprecation_date",
-            value=datetime.now(UTC).isoformat()
+            value=datetime.now(UTC).isoformat(),
         )
 
         if request.reason:
@@ -259,7 +253,7 @@ async def deprecate_model(
                 name=request.name,
                 version=request.version,
                 key="deprecation_reason",
-                value=request.reason
+                value=request.reason,
             )
 
         log_lifecycle_event(
@@ -267,7 +261,7 @@ async def deprecate_model(
             version=request.version,
             event="deprecated",
             user="system",
-            reason=request.reason
+            reason=request.reason,
         )
 
         return {"status": "deprecated", "name": request.name, "version": request.version}
@@ -281,15 +275,14 @@ async def deprecate_model(
             version=request.version,
             event="deprecation_failed",
             user="system",
-            error_message=str(e)
+            error_message=str(e),
         )
         raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}") from e
 
 
 @app.post("/retire")
 async def retire_model(
-    request: RetirementRequest,
-    client: MlflowClient = Depends(get_mlflow_client)
+    request: RetirementRequest, client: MlflowClient = Depends(get_mlflow_client)
 ):
     """
     Retire a deprecated model version according to policy
@@ -306,7 +299,7 @@ async def retire_model(
         policy.validate_retirement_request(
             model_name=request.name,
             version=request.version,
-            archive_location=request.archive_location
+            archive_location=request.archive_location,
         )
 
         mv = client.get_model_version(request.name, request.version)
@@ -316,21 +309,18 @@ async def retire_model(
                 name=request.name,
                 version=request.version,
                 key="archive_location",
-                value=request.archive_location
+                value=request.archive_location,
             )
 
         client.set_model_version_tag(
             name=request.name,
             version=request.version,
             key="retired_date",
-            value=datetime.now(UTC).isoformat()
+            value=datetime.now(UTC).isoformat(),
         )
 
         client.set_model_version_tag(
-            name=request.name,
-            version=request.version,
-            key="retired",
-            value="true"
+            name=request.name, version=request.version, key="retired", value="true"
         )
 
         log_lifecycle_event(
@@ -338,7 +328,7 @@ async def retire_model(
             version=request.version,
             event="retired",
             user="system",
-            archive_location=request.archive_location
+            archive_location=request.archive_location,
         )
 
         return {"status": "retired", "name": request.name, "version": request.version}
@@ -352,7 +342,7 @@ async def retire_model(
             version=request.version,
             event="retirement_failed",
             user="system",
-            error_message=str(e)
+            error_message=str(e),
         )
         raise HTTPException(status_code=500, detail=f"Internal error: {str(e)}") from e
 
@@ -372,10 +362,9 @@ async def get_audit_log(model_name: str = None):
             for line in f:
                 if model_name and model_name not in line:
                     continue
-                entries.append(AuditLogEntry(
-                    timestamp=datetime.now().isoformat(),
-                    event=line.strip()
-                ))
+                entries.append(
+                    AuditLogEntry(timestamp=datetime.now().isoformat(), event=line.strip())
+                )
     except Exception:
         pass
 
@@ -383,10 +372,7 @@ async def get_audit_log(model_name: str = None):
 
 
 @app.post("/backup", response_model=BackupResponse)
-async def trigger_backup(
-    request: BackupRequest,
-    background_tasks: BackgroundTasks
-):
+async def trigger_backup(request: BackupRequest, background_tasks: BackgroundTasks):
     """
     Trigger backup operation with policy parameters.
 
@@ -399,15 +385,11 @@ async def trigger_backup(
         policy = BackupPolicy.get_instance()
 
         background_tasks.add_task(
-            policy.execute_backup,
-            model_name=request.model_name,
-            destination=request.destination
+            policy.execute_backup, model_name=request.model_name, destination=request.destination
         )
 
         return BackupResponse(
-            status="initiated",
-            model_name=request.model_name,
-            destination=request.destination
+            status="initiated", model_name=request.model_name, destination=request.destination
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
