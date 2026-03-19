@@ -3,7 +3,7 @@ FastAPI application for Model Registry - MLflow 2.11.0 Compatible
 """
 
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timezone
 from typing import Any
 
 import mlflow
@@ -14,6 +14,7 @@ from mlflow.tracking import MlflowClient
 from pydantic import ValidationError
 
 from .schemas import (
+from .deprecation_policy import DeprecationPolicy
     AuditLogEntry,
     BackupRequest,
     BackupResponse,
@@ -49,11 +50,12 @@ async def health_check() -> RegistryHealthResponse:
         mlflow_ok = True
     except Exception:
         pass
-    
+
     return RegistryHealthResponse(
         status="healthy" if mlflow_ok else "degraded",
         mlflow_connected=mlflow_ok,
-        timestamp=datetime.now(timezone.utc).isoformat()
+        timestamp=datetime.now(timezone.utc).isoformat(),
+        service="registry",
     )
 
 
@@ -65,27 +67,27 @@ async def register_model(request: ModelRegisterRequest, client: MlflowClient = D
     """Register a new model version."""
     try:
         client.create_registered_model(request.name)
-        
+
         mv = client.create_model_version(
             name=request.name,
             source=request.source,
             run_id=request.run_id
         )
-        
+
         client.set_model_version_tag(
             name=request.name,
             version=mv.version,
             key="registered_date",
             value=datetime.now(timezone.utc).isoformat()
         )
-        
+
         log_lifecycle_event(
             model_name=request.name,
             version=mv.version,
             event="registered",
             user="system"
         )
-        
+
         return ModelInfo(
             name=request.name,
             version=mv.version,
@@ -107,7 +109,7 @@ async def list_models(query: ModelQueryRequest = Depends(), client: MlflowClient
     try:
         filter_str = f"name = '{query.name}'" if query.name else None
         models = client.search_registered_models(filter_string=filter_str, max_results=query.limit)
-        
+
         infos = []
         for model in models:
             latest = client.get_latest_versions(model.name, stages=["Production", "Staging"])
@@ -127,7 +129,7 @@ async def list_models(query: ModelQueryRequest = Depends(), client: MlflowClient
                 status="READY",
                 metrics=metrics
             ))
-        
+
         return ModelListResponse(models=infos, total=len(infos), page=1, limit=query.limit)
     except MlflowException as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
@@ -145,9 +147,9 @@ async def promote_model(request: ModelPromoteRequest, client: MlflowClient = Dep
             version=request.version,
             stage=request.stage
         )
-        
+
         mv = client.get_model_version(request.name, request.version)
-        
+
         log_lifecycle_event(
             model_name=request.name,
             version=request.version,
@@ -155,7 +157,7 @@ async def promote_model(request: ModelPromoteRequest, client: MlflowClient = Dep
             user="system",
             new_stage=request.stage
         )
-        
+
         return ModelInfo(
             name=mv.name,
             version=mv.version,
@@ -176,7 +178,7 @@ async def get_model_version(name: str, version: str, client: MlflowClient = Depe
     """Get specific model version."""
     try:
         mv = client.get_model_version(name, version)
-        
+
         metrics = {}
         if mv.run_id:
             try:
@@ -184,7 +186,7 @@ async def get_model_version(name: str, version: str, client: MlflowClient = Depe
                 metrics = dict(run.data.metrics)
             except Exception:
                 pass
-        
+
         return ModelInfo(
             name=mv.name,
             version=mv.version,
@@ -204,14 +206,14 @@ async def delete_model_version(name: str, version: str, client: MlflowClient = D
     try:
         mv = client.get_model_version(name, version)
         client.delete_model_version(name, version)
-        
+
         log_lifecycle_event(
             model_name=name,
             version=version,
             event="deleted",
             user="system"
         )
-        
+
         return JSONResponse(status_code=204, content=None)
     except MlflowException as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
@@ -224,7 +226,7 @@ async def deprecate_model(
 ):
     """
     Deprecate a model version according to policy
-    
+
     Request body:
     {
         "name": "model-name",
@@ -239,21 +241,21 @@ async def deprecate_model(
             version=request.version,
             reason=request.reason
         )
-        
+
         client.set_model_version_tag(
             name=request.name,
             version=request.version,
             key="deprecated",
             value="true"
         )
-        
+
         client.set_model_version_tag(
             name=request.name,
             version=request.version,
             key="deprecation_date",
             value=datetime.now(timezone.utc).isoformat()
         )
-        
+
         if request.reason:
             client.set_model_version_tag(
                 name=request.name,
@@ -261,7 +263,7 @@ async def deprecate_model(
                 key="deprecation_reason",
                 value=request.reason
             )
-        
+
         log_lifecycle_event(
             model_name=request.name,
             version=request.version,
@@ -269,7 +271,7 @@ async def deprecate_model(
             user="system",
             reason=request.reason
         )
-        
+
         return {"status": "deprecated", "name": request.name, "version": request.version}
     except MlflowException as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
@@ -293,7 +295,7 @@ async def retire_model(
 ):
     """
     Retire a deprecated model version according to policy
-    
+
     Request body:
     {
         "name": "model-name",
@@ -308,9 +310,9 @@ async def retire_model(
             version=request.version,
             archive_location=request.archive_location
         )
-        
+
         mv = client.get_model_version(request.name, request.version)
-        
+
         if request.archive_location:
             client.set_model_version_tag(
                 name=request.name,
@@ -318,21 +320,21 @@ async def retire_model(
                 key="archive_location",
                 value=request.archive_location
             )
-        
+
         client.set_model_version_tag(
             name=request.name,
             version=request.version,
             key="retired_date",
             value=datetime.now(timezone.utc).isoformat()
         )
-        
+
         client.set_model_version_tag(
             name=request.name,
             version=request.version,
             key="retired",
             value="true"
         )
-        
+
         log_lifecycle_event(
             model_name=request.name,
             version=request.version,
@@ -340,7 +342,7 @@ async def retire_model(
             user="system",
             archive_location=request.archive_location
         )
-        
+
         return {"status": "retired", "name": request.name, "version": request.version}
     except MlflowException as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
@@ -361,7 +363,7 @@ async def retire_model(
 async def get_audit_log(model_name: str = None):
     """
     Query audit log entries
-    
+
     Query params:
     - model_name: Filter by model name
     """
@@ -378,7 +380,7 @@ async def get_audit_log(model_name: str = None):
                 ))
     except Exception:
         pass
-    
+
     return entries
 
 
@@ -389,21 +391,21 @@ async def trigger_backup(
 ):
     """
     Trigger backup operation with policy parameters.
-    
+
     Requires REGISTRY_DEV_MODE=true for iR&D or proper authentication in production.
     Runs backup asynchronously via background task to avoid HTTP timeout.
     """
     try:
         from .backup import BackupPolicy
-        
+
         policy = BackupPolicy.get_instance()
-        
+
         background_tasks.add_task(
             policy.execute_backup,
             model_name=request.model_name,
             destination=request.destination
         )
-        
+
         return BackupResponse(
             status="initiated",
             model_name=request.model_name,

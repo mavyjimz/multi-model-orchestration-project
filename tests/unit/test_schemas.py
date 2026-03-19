@@ -14,7 +14,7 @@ def test_model_register_request_valid():
     req = ModelRegisterRequest(
         name="test-model",
         version="1.0.0",
-        source_path="/tmp/model",
+        source="/tmp/model",
         run_id="run-123",
         description="Test"
     )
