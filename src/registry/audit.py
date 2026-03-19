@@ -5,10 +5,9 @@ Logs to: logs/audit/deprecation.log (JSON structured)
 """
 import json
 import logging
-import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Any
 
 # Ensure audit log directory exists (respects your SOP: ./logs/audit/)
 AUDIT_LOG_DIR = Path("logs/audit")
@@ -22,12 +21,12 @@ audit_logger.setLevel(logging.INFO)
 if not audit_logger.handlers:
     log_file = AUDIT_LOG_DIR / "deprecation.log"
     file_handler = logging.FileHandler(log_file, mode='a', encoding='utf-8')
-    
+
     class JSONFormatter(logging.Formatter):
         """Custom formatter for structured JSON audit logs"""
         def format(self, record: logging.LogRecord) -> str:
             log_entry = {
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
                 "level": record.levelname,
                 "action": getattr(record, "action", None),
                 "model_name": getattr(record, "model_name", None),
@@ -39,7 +38,7 @@ if not audit_logger.handlers:
                 "message": record.getMessage(),
             }
             return json.dumps({k: v for k, v in log_entry.items() if v is not None})
-    
+
     file_handler.setFormatter(JSONFormatter())
     audit_logger.addHandler(file_handler)
 
@@ -49,8 +48,8 @@ def log_deprecation(
     version: str,
     reason: str,
     actor: str = "system",
-    migration_guide: Optional[str] = None,
-    ip_address: Optional[str] = None,
+    migration_guide: str | None = None,
+    ip_address: str | None = None,
     **extra_metadata
 ) -> None:
     """Log a deprecation event with structured fields"""
@@ -78,8 +77,8 @@ def log_retirement(
     version: str,
     soft_delete: bool,
     actor: str = "system",
-    archive_location: Optional[str] = None,
-    ip_address: Optional[str] = None,
+    archive_location: str | None = None,
+    ip_address: str | None = None,
     **extra_metadata
 ) -> None:
     """Log a retirement event with structured fields"""
@@ -109,9 +108,9 @@ def log_lifecycle_event(
     version: str,
     status: str = "success",
     actor: str = "system",
-    metadata: Optional[Dict[str, Any]] = None,
-    ip_address: Optional[str] = None,
-    error_message: Optional[str] = None
+    metadata: dict[str, Any] | None = None,
+    ip_address: str | None = None,
+    error_message: str | None = None
 ) -> None:
     """Generic lifecycle event logger for extendability"""
     level = logging.INFO if status == "success" else logging.ERROR
@@ -136,21 +135,21 @@ def log_lifecycle_event(
 
 
 def query_audit_log(
-    model_name: Optional[str] = None,
-    action: Optional[str] = None,
-    version: Optional[str] = None,
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None,
+    model_name: str | None = None,
+    action: str | None = None,
+    version: str | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
     limit: int = 100
-) -> list[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Query audit log entries from JSONL file"""
     results = []
     log_file = AUDIT_LOG_DIR / "deprecation.log"
-    
+
     if not log_file.exists():
         return results
-    
-    with open(log_file, 'r', encoding='utf-8') as f:
+
+    with open(log_file, encoding='utf-8') as f:
         for line in f:
             line = line.strip()
             if not line:

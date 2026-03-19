@@ -1,11 +1,13 @@
-import pytest
-from pydantic import ValidationError
 from datetime import datetime
 
+import pytest
+from pydantic import ValidationError
+
 from src.registry.schemas import (
-    ModelRegisterRequest, ModelPromoteRequest, ModelInfo,
-    RegistryHealthResponse, AuditLogEntry
+    ModelRegisterRequest,
+    RegistryHealthResponse,
 )
+
 
 def test_model_register_request_valid():
     """Test valid ModelRegisterRequest creation"""

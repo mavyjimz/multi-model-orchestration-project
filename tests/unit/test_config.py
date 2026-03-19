@@ -1,6 +1,3 @@
-import pytest
-import os
-from pathlib import Path
 
 def test_project_root_config():
     """Test PROJECT_ROOT resolution"""

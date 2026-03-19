@@ -4,16 +4,15 @@ Continuous Training Script
 Placeholder for Phase 8 MLflow integration
 """
 
-import os
-import yaml
 import logging
-from datetime import datetime
+
+import yaml
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def load_config(config_path: str = "config/retrain_config.yaml") -> dict:
-    with open(config_path, 'r') as f:
+    with open(config_path) as f:
         return yaml.safe_load(f)
 
 def check_new_data(min_samples: int = 100) -> bool:
@@ -44,14 +43,14 @@ def register_model(metrics: dict, config: dict) -> bool:
 
 def main():
     config = load_config()
-    
+
     if not check_new_data(config['training']['min_new_samples']):
         logger.info("Insufficient new data, skipping training")
         return
-    
+
     metrics = train_model(config)
     success = register_model(metrics, config)
-    
+
     if success:
         logger.info("Continuous training pipeline completed successfully")
     else:

@@ -1,6 +1,7 @@
-import pytest
 import sys
 from pathlib import Path
+
+import pytest
 
 # Add src to path for imports
 PROJECT_ROOT = Path(__file__).parent.parent

@@ -5,22 +5,23 @@ Centralized Logging Configuration
 
 import logging
 import sys
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+
 
 def setup_logging(name: str = "mlops-registry", log_dir: str = "logs") -> logging.Logger:
     """Configure application logging."""
-    
+
     # Create log directory
     Path(log_dir).mkdir(exist_ok=True)
-    
+
     # Create logger
     logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
-    
+
     # Clear existing handlers
     logger.handlers.clear()
-    
+
     # Console handler
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(logging.INFO)
@@ -30,7 +31,7 @@ def setup_logging(name: str = "mlops-registry", log_dir: str = "logs") -> loggin
     )
     console_handler.setFormatter(console_format)
     logger.addHandler(console_handler)
-    
+
     # File handler
     log_file = Path(log_dir) / f"{name}_{datetime.now().strftime('%Y%m%d')}.log"
     file_handler = logging.FileHandler(log_file)
@@ -41,5 +42,5 @@ def setup_logging(name: str = "mlops-registry", log_dir: str = "logs") -> loggin
     )
     file_handler.setFormatter(file_format)
     logger.addHandler(file_handler)
-    
+
     return logger

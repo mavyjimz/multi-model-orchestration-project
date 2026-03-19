@@ -2,18 +2,18 @@
 """
 Command Line Interface for Model Registry - MLflow 2.11.0 Compatible
 """
-import click
-import mlflow
-from mlflow.tracking import MlflowClient
-import requests
 import json
-import sys
 import os
-from typing import Optional, Tuple
+import sys
 
 # Ensure project root is in Python path for direct CLI execution
-import sys
 from pathlib import Path
+
+import click
+import mlflow
+import requests
+from mlflow.tracking import MlflowClient
+
 _project_root = Path(__file__).resolve().parents[2]
 if str(_project_root) not in sys.path:
     sys.path.insert(0, str(_project_root))
@@ -49,7 +49,7 @@ def api_request(method: str, endpoint: str, payload: dict = None) -> dict:
         click.echo("Error: Request timed out", err=True)
         sys.exit(1)
     except json.JSONDecodeError:
-        click.echo(f"Error: Invalid JSON response from API", err=True)
+        click.echo("Error: Invalid JSON response from API", err=True)
         sys.exit(1)
 
 @click.group()
@@ -77,8 +77,8 @@ def health(ctx):
 @click.option('--description', default='', help='Model description')
 @click.option('--metadata', multiple=True, help='Custom metadata (key=value, use multiple times)')
 @click.pass_context
-def register(ctx, name: str, version: str, source: str, run_id: Optional[str], 
-             description: str, metadata: Tuple[str, ...]):
+def register(ctx, name: str, version: str, source: str, run_id: str | None,
+             description: str, metadata: tuple[str, ...]):
     """Register a new model version"""
     # Parse metadata key=value pairs
     metadata_dict = {}
@@ -105,12 +105,12 @@ def register(ctx, name: str, version: str, source: str, run_id: Optional[str],
 @cli.command(name='promote')
 @click.option('--name', required=True, help='Model name')
 @click.option('--version', required=True, help='Model version (integer)')
-@click.option('--stage', required=True, 
+@click.option('--stage', required=True,
               type=click.Choice(['Staging', 'Production', 'Archived']),
               help='Target stage')
 @click.option('--comment', help='Promotion rationale/comment')
 @click.pass_context
-def promote(ctx, name: str, version: str, stage: str, comment: Optional[str]):
+def promote(ctx, name: str, version: str, stage: str, comment: str | None):
     """Promote a model version to a new stage"""
     payload = {
         "name": name,
@@ -128,10 +128,10 @@ def promote(ctx, name: str, version: str, stage: str, comment: Optional[str]):
 @click.option('--stage', type=click.Choice(['None', 'Staging', 'Production', 'Archived']),
               help='Filter by stage')
 @click.option('--limit', default=50, help='Max results (1-200)')
-@click.option('--format', 'output_format', default='table', 
+@click.option('--format', 'output_format', default='table',
               type=click.Choice(['table', 'json']), help='Output format')
 @click.pass_context
-def list_models(ctx, name: Optional[str], stage: Optional[str], 
+def list_models(ctx, name: str | None, stage: str | None,
                 limit: int, output_format: str):
     """List registered models"""
     params = {"limit": limit}
@@ -198,7 +198,7 @@ def delete_model(ctx, name: str, version: str, force: bool):
 def deprecate(ctx, name, version, reason, migration_guide, effective_date, no_notify, actor):
     """
     Deprecate a model version according to policy
-    
+
     Example:
         python src/registry/cli.py deprecate \
             --name intent-classifier-sgd \
@@ -207,12 +207,14 @@ def deprecate(ctx, name, version, reason, migration_guide, effective_date, no_no
             --migration-guide "docs/migration/v1-to-v2.md" \
             --actor "jim-mlops"
     """
-    from src.registry.schemas import DeprecationRequest
-    from pydantic import ValidationError
-    from src.registry.deprecation_policy import DeprecationPolicy, PolicyViolationError
-    from src.registry.audit import log_deprecation, log_lifecycle_event
     from datetime import datetime
-    
+
+    from pydantic import ValidationError
+
+    from src.registry.audit import log_deprecation, log_lifecycle_event
+    from src.registry.deprecation_policy import DeprecationPolicy, PolicyViolationError
+    from src.registry.schemas import DeprecationRequest
+
     try:
         # Parse effective date if provided
         eff_date = None
@@ -222,7 +224,7 @@ def deprecate(ctx, name, version, reason, migration_guide, effective_date, no_no
             except ValueError:
                 click.echo(f"Error: Invalid date format '{effective_date}'. Use ISO format (YYYY-MM-DD)", err=True)
                 ctx.exit(1)
-        
+
         # Validate request against schema
         request = DeprecationRequest(
             name=name,
@@ -232,7 +234,7 @@ def deprecate(ctx, name, version, reason, migration_guide, effective_date, no_no
             effective_date=eff_date,
             notify_stakeholders=not no_notify
         )
-        
+
         # Load and apply policy
         policy = DeprecationPolicy.get_instance()
         validation = policy.validate_deprecation_request(
@@ -242,11 +244,11 @@ def deprecate(ctx, name, version, reason, migration_guide, effective_date, no_no
             migration_guide=request.migration_guide,
             effective_date=request.effective_date
         )
-        
+
         # Display warnings if any
         for warning in validation.get('warnings', []):
             click.echo(f"⚠️  Warning: {warning}", err=True)
-        
+
         # Log to audit trail BEFORE making changes (audit-first principle)
         log_deprecation(
             model_name=request.name,
@@ -258,17 +260,17 @@ def deprecate(ctx, name, version, reason, migration_guide, effective_date, no_no
             policy_validated=True,
             warning_period_days=validation.get('warning_period_days')
         )
-        
+
         # Update MLflow model version metadata with deprecation status
         # Note: In dev mode, this may be a no-op or mock operation
         # Initialize MLflow client directly for CLI usage
         tracking_uri = os.environ.get("MLFLOW_TRACKING_URI", "http://127.0.0.1:5000")
         mlflow.set_tracking_uri(tracking_uri)
         client = MlflowClient(tracking_uri=tracking_uri)
-        
+
         try:
             # Attempt to update model version tags with deprecation metadata
-            model_version = client.get_model_version(request.name, request.version)
+            client.get_model_version(request.name, request.version)
             client.set_model_version_tag(
                 name=request.name,
                 version=request.version,
@@ -300,7 +302,7 @@ def deprecate(ctx, name, version, reason, migration_guide, effective_date, no_no
                 actor=actor,
                 error_message=str(mlflow_err)
             )
-        
+
         # Success output
         click.echo(f"✓ Deprecation recorded for {request.name} v{request.version}")
         click.echo(f"  Reason: {request.reason}")
@@ -310,7 +312,7 @@ def deprecate(ctx, name, version, reason, migration_guide, effective_date, no_no
             click.echo(f"  Effective date: {request.effective_date.isoformat()}")
         if validation.get('warning_period_days'):
             click.echo(f"  Warning period: {validation['warning_period_days']} days")
-        
+
         # Log success to audit
         log_lifecycle_event(
             action="deprecate",
@@ -320,7 +322,7 @@ def deprecate(ctx, name, version, reason, migration_guide, effective_date, no_no
             actor=actor,
             metadata={"migration_guide": request.migration_guide}
         )
-        
+
     except PolicyViolationError as e:
         click.echo(f"Error: Policy violation - {e}", err=True)
         log_lifecycle_event(
@@ -361,7 +363,7 @@ def deprecate(ctx, name, version, reason, migration_guide, effective_date, no_no
 def retire(ctx, name, version, soft_delete, archive_location, actor, force):
     """
     Retire a deprecated model version according to policy
-    
+
     Example:
         python src/registry/cli.py retire \
             --name intent-classifier-sgd \
@@ -369,12 +371,14 @@ def retire(ctx, name, version, soft_delete, archive_location, actor, force):
             --actor "jim-mlops" \
             --archive-location "s3://archive-bucket/models/retired/"
     """
-    from src.registry.schemas import RetirementRequest
-    from src.registry.deprecation_policy import DeprecationPolicy, PolicyViolationError
-    from src.registry.audit import log_retirement, log_lifecycle_event
-    from pydantic import ValidationError
     from datetime import datetime
-    
+
+    from pydantic import ValidationError
+
+    from src.registry.audit import log_lifecycle_event, log_retirement
+    from src.registry.deprecation_policy import DeprecationPolicy, PolicyViolationError
+    from src.registry.schemas import RetirementRequest
+
     try:
         # Validate request against schema
         request = RetirementRequest(
@@ -384,19 +388,19 @@ def retire(ctx, name, version, soft_delete, archive_location, actor, force):
             confirmation="I confirm retirement",  # Auto-confirm for CLI; API requires explicit
             archive_location=archive_location
         )
-        
+
         # Load policy
         policy = DeprecationPolicy.get_instance()
-        
+
         # Check eligibility unless --force
         if not force:
             # Try to get deprecation date from MLflow tags
             tracking_uri = os.environ.get("MLFLOW_TRACKING_URI", "http://127.0.0.1:5000")
             mlflow.set_tracking_uri(tracking_uri)
             client = MlflowClient(tracking_uri=tracking_uri)
-            
+
             try:
-                model_version = client.get_model_version(request.name, request.version)
+                client.get_model_version(request.name, request.version)
                 deprecation_tag = model_version.tags.get("deprecation_date")
                 if deprecation_tag:
                     from datetime import datetime
@@ -410,7 +414,7 @@ def retire(ctx, name, version, soft_delete, archive_location, actor, force):
                     click.echo("⚠️  Warning: No deprecation_date tag found; proceeding with retirement", err=True)
             except Exception as e:
                 click.echo(f"⚠️  Warning: Could not check eligibility: {e}", err=True)
-        
+
         # Validate retirement request
         validation = policy.validate_retirement_request(
             model_name=request.name,
@@ -418,7 +422,7 @@ def retire(ctx, name, version, soft_delete, archive_location, actor, force):
             actor=actor,
             soft_delete=request.soft_delete
         )
-        
+
         # Log to audit trail BEFORE making changes
         log_retirement(
             model_name=request.name,
@@ -429,7 +433,7 @@ def retire(ctx, name, version, soft_delete, archive_location, actor, force):
             ip_address=ctx.obj.get('ip_address') if ctx.obj else None,
             policy_validated=True
         )
-        
+
         # Perform retirement action
         if request.soft_delete:
             # Soft delete: update MLflow stage to "Archived" and add retirement tags
@@ -462,7 +466,7 @@ def retire(ctx, name, version, soft_delete, archive_location, actor, force):
             click.echo("    This action is irreversible. Use --soft-delete for safety.")
             # In production, add confirmation prompt here
             # For iR&D, skip actual deletion
-        
+
         # Success output
         click.echo(f"✓ Retirement recorded for {request.name} v{request.version}")
         click.echo(f"  Soft delete: {request.soft_delete}")
@@ -470,7 +474,7 @@ def retire(ctx, name, version, soft_delete, archive_location, actor, force):
             click.echo(f"  Archive location: {request.archive_location}")
         if validation.get('requirements', {}).get('audit_retention_until'):
             click.echo(f"  Audit retained until: {validation['requirements']['audit_retention_until']}")
-        
+
         # Log success
         log_lifecycle_event(
             action="retire",
@@ -480,7 +484,7 @@ def retire(ctx, name, version, soft_delete, archive_location, actor, force):
             actor=actor,
             metadata={"soft_delete": request.soft_delete, "archive_location": request.archive_location}
         )
-        
+
     except PolicyViolationError as e:
         click.echo(f"Error: Policy violation - {e}", err=True)
         log_lifecycle_event(

@@ -1,9 +1,6 @@
-import pytest
 from fastapi.testclient import TestClient
-from datetime import datetime
 
 from src.registry.api import app
-from src.registry.schemas import RegistryHealthResponse
 
 client = TestClient(app)
 
