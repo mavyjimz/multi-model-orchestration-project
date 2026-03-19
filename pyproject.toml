@@ -17,6 +17,9 @@ warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = false
 ignore_missing_imports = true
+explicit_package_bases = true
+disable_error_code = ["import-untyped", "valid-type", "var-annotated", "no-any-return", "assignment", "call-arg", "attr-defined"]
+allow_untyped_calls = true
 exclude = ["venv", ".venv", "mlruns", "artifacts"]
 
 [[tool.mypy.overrides]]
@@ -41,10 +44,3 @@ exclude_lines = [
 ]
 show_missing = true
 
-[tool.mypy]
-python_version = "3.12"
-ignore_missing_imports = true
-explicit_package_bases = true
-disable_error_code = ["import-untyped", "valid-type", "var-annotated", "no-any-return", "assignment", "call-arg", "attr-defined"]
-allow_untyped_defs = true
-allow_untyped_calls = true
