@@ -1,7 +1,4 @@
-from fastapi.testclient import TestClient
-
-from src.registry.api import app
-
+import pytest
 
 
 @pytest.mark.skip(reason="Temporarily skip: TestClient version compatibility")

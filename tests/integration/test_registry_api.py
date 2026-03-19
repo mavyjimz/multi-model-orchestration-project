@@ -1,8 +1,4 @@
 import pytest
-from fastapi.testclient import TestClient
-
-from src.registry.api import app
-
 
 
 @pytest.mark.integration
