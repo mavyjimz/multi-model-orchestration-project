@@ -3,7 +3,7 @@ FastAPI application for Model Registry - MLflow 2.11.0 Compatible
 """
 
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import mlflow
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, status
@@ -12,6 +12,8 @@ from mlflow.exceptions import MlflowException
 from mlflow.tracking import MlflowClient
 from pydantic import ValidationError
 
+from .audit import log_lifecycle_event
+from .deprecation_policy import DeprecationPolicy
 from .schemas import (
     AuditLogEntry,
     BackupRequest,
@@ -25,9 +27,6 @@ from .schemas import (
     RegistryHealthResponse,
     RetirementRequest,
 )
-from .deprecation_policy import DeprecationPolicy
-
-from .audit import log_lifecycle_event
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +52,8 @@ async def health_check() -> RegistryHealthResponse:
     return RegistryHealthResponse(
         status="healthy" if mlflow_ok else "degraded",
         mlflow_connected=mlflow_ok,
-        timestamp=datetime.now(timezone.utc).isoformat(),
+        timestamp=datetime.now(UTC).isoformat(),
+        service="registry",
         service="registry",
     )
 
@@ -77,7 +77,7 @@ async def register_model(request: ModelRegisterRequest, client: MlflowClient = D
             name=request.name,
             version=mv.version,
             key="registered_date",
-            value=datetime.now(timezone.utc).isoformat()
+            value=datetime.now(UTC).isoformat()
         )
 
         log_lifecycle_event(
@@ -252,7 +252,7 @@ async def deprecate_model(
             name=request.name,
             version=request.version,
             key="deprecation_date",
-            value=datetime.now(timezone.utc).isoformat()
+            value=datetime.now(UTC).isoformat()
         )
 
         if request.reason:
@@ -324,7 +324,7 @@ async def retire_model(
             name=request.name,
             version=request.version,
             key="retired_date",
-            value=datetime.now(timezone.utc).isoformat()
+            value=datetime.now(UTC).isoformat()
         )
 
         client.set_model_version_tag(
@@ -369,7 +369,7 @@ async def get_audit_log(model_name: str = None):
     entries = []
     try:
         log_file = "logs/audit/registry_audit.log"
-        with open(log_file, 'r') as f:
+        with open(log_file) as f:
             for line in f:
                 if model_name and model_name not in line:
                     continue
