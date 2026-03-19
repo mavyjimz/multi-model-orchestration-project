@@ -20,7 +20,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
-          pip install pytest-cov ruff mypy
+          pip install pytest-cov ruff mypy bandit
       
       - name: Run tests with coverage
         run: |
