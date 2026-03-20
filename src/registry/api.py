@@ -118,11 +118,11 @@ async def list_models(
                         metrics = dict(run.data.metrics)
                     except Exception:
                         pass
-                
+
                 # Build ModelInfo with safe fallbacks
                 model_version = latest[0].version if latest else None
                 model_stage = latest[0].current_stage if latest else None
-                
+
                 # Only create ModelInfo if we have valid data
                 if model_version is not None:
                     infos.append(
@@ -145,7 +145,7 @@ async def list_models(
                 continue
 
         return ModelListResponse(models=infos, total=len(infos), page=1, limit=query.limit)
-    
+
     except ValidationError as ve:
         # Pydantic validation error on response - return empty list
         logger.warning(f"ModelListResponse validation error: {ve}")
