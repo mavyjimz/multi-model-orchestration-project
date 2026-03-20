@@ -17,3 +17,4 @@ mlflow>=2.0.0
 # Test dependencies with compatible versions
 httpx>=0.25.0,<0.28.0
 starlette>=0.36.0
+prometheus-client==0.19.0

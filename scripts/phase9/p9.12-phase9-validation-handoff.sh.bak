@@ -1,0 +1,67 @@
+#!/bin/bash
+# Phase 9.12: Phase 9 validation & handoff
+# Deliverable: Full observability stack test + documentation
+
+set -e
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
+LOG_FILE="$PROJECT_ROOT/logs/p9.12-execution.log"
+
+log() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [p9.12] $1" | tee -a "$LOG_FILE"
+}
+
+validate() {
+    log "Validating p9.12 deliverables..."
+    
+    # Check all sub-phase scripts exist
+    for i in $(seq 1 11); do
+        if [[ ! -f "$SCRIPT_DIR/p9.$i-"*".sh" ]]; then
+            log "ERROR: p9.$i script not found"
+            return 1
+        fi
+    done
+    
+    # Check metrics endpoint in api.py
+    if ! grep -q "/metrics" "$PROJECT_ROOT/src/registry/api.py"; then
+        log "ERROR: /metrics endpoint not found"
+        return 1
+    fi
+    
+    # Check metrics.py exists
+    if [[ ! -f "$PROJECT_ROOT/src/core/metrics.py" ]]; then
+        log "ERROR: metrics.py not found"
+        return 1
+    fi
+    
+    log "✓ p9.12 validation passed"
+    return 0
+}
+
+main() {
+    log "=========================================="
+    log "Starting p9.12: Phase 9 validation & handoff"
+    log "=========================================="
+    
+    log "Creating Phase 9 documentation..."
+    nano "$PROJECT_ROOT/docs/phase9-observability.md"
+    
+    log "Cleaning trailing whitespace..."
+    sed -i 's/[[:space:]]*$//' "$PROJECT_ROOT/docs/phase9-observability.md" 2>/dev/null || true
+    
+    if validate; then
+        log "=========================================="
+        log "✓ p9.12 COMPLETED SUCCESSFULLY"
+        log "=========================================="
+        log "Phase 9 is ready for handoff."
+        log "Run master-switch-p9.sh to execute all sub-phases."
+        return 0
+    else
+        log "=========================================="
+        log "✗ p9.12 VALIDATION FAILED"
+        log "=========================================="
+        return 1
+    fi
+}
+
+main "$@"

@@ -15,6 +15,9 @@ from mlflow.tracking import MlflowClient
 from pydantic import ValidationError
 
 from src.core.logging_config import setup_logger
+from src.core.metrics import get_metrics, get_content_type, record_request, record_error
+from src.core.metrics import set_model_version, record_inference
+import time
 
 from .audit import log_lifecycle_event
 from .deprecation_policy import DeprecationPolicy
@@ -447,3 +450,54 @@ async def trigger_backup(request: BackupRequest, background_tasks: BackgroundTas
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
+
+@app.get("/metrics")
+async def metrics_endpoint():
+    """
+    Prometheus metrics endpoint.
+    Returns metrics in Prometheus text exposition format.
+    """
+    from fastapi import Response
+    metrics_data = get_metrics()
+    return Response(content=metrics_data, media_type=get_content_type())
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """Middleware for structured logging and metrics collection."""
+    start_time = time.time()
+
+    # Generate correlation ID for request tracing
+    correlation_id = request.headers.get("X-Correlation-ID", str(uuid.uuid4()))
+
+    response = await call_next(request)
+
+    # Calculate latency
+    latency_ms = (time.time() - start_time) * 1000
+
+    # Record Prometheus metrics
+    record_request(
+        endpoint=request.url.path,
+        method=request.method,
+        status_code=response.status_code,
+        latency=latency_ms / 1000.0
+    )
+
+    # Record errors
+    if response.status_code >= 400:
+        record_error(
+            endpoint=request.url.path,
+            error_type=f"http_{response.status_code}"
+        )
+
+    # Structured logging
+    logger.info(
+        f"{request.method} {request.url.path}",
+        extra={
+            "correlation_id": correlation_id,
+            "latency_ms": round(latency_ms, 2),
+            "status_code": response.status_code,
+        }
+    )
+
+    return response
