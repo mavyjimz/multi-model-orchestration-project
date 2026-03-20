@@ -36,6 +36,8 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Multi-Model Orchestration Registry API", version="1.0.0")
 logger = setup_logger(__name__)
+
+
 def get_correlation_id(request: Request) -> str:
     """Extract correlation ID from header or generate new one."""
     return request.headers.get("X-Correlation-ID") or str(uuid.uuid4())
@@ -64,10 +66,12 @@ async def log_requests(request: Request, call_next):
             "path": request.url.path,
             "status_code": response.status_code,
             "latency_ms": round(latency_ms, 2),
-        }
+        },
     )
 
     return response
+
+
 @app.get("/health", response_model=RegistryHealthResponse)
 async def health_check() -> RegistryHealthResponse:
     """Check registry health status."""

@@ -2,6 +2,7 @@
 Structured logging configuration for MLOps observability.
 Implements JSON-formatted logs with correlation ID support.
 """
+
 import json
 import logging
 import sys
