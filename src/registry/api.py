@@ -3,10 +3,13 @@ FastAPI application for Model Registry - MLflow 2.11.0 Compatible
 """
 
 import logging
+from src.core.logging_config import setup_logger
 from datetime import UTC, datetime
+import time
+import uuid
 
 import mlflow
-from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, status
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, status, Request
 from fastapi.responses import JSONResponse
 from mlflow.exceptions import MlflowException
 from mlflow.tracking import MlflowClient
@@ -31,6 +34,10 @@ from .schemas import (
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Multi-Model Orchestration Registry API", version="1.0.0")
+logger = setup_logger(__name__)
+def get_correlation_id(request: Request) -> str:
+    """Extract correlation ID from header or generate new one."""
+    return request.headers.get("X-Correlation-ID") or str(uuid.uuid4())
 
 
 def get_mlflow_client() -> MlflowClient:
@@ -39,6 +46,27 @@ def get_mlflow_client() -> MlflowClient:
     return MlflowClient(tracking_uri)
 
 
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start_time = time.time()
+    corr_id = get_correlation_id(request)
+    response = await call_next(request)
+    response.headers["X-Correlation-ID"] = corr_id
+
+    latency_ms = (time.time() - start_time) * 1000
+
+    logger.info(
+        "Request completed",
+        extra={
+            "correlation_id": corr_id,
+            "method": request.method,
+            "path": request.url.path,
+            "status_code": response.status_code,
+            "latency_ms": round(latency_ms, 2),
+        }
+    )
+
+    return response
 @app.get("/health", response_model=RegistryHealthResponse)
 async def health_check() -> RegistryHealthResponse:
     """Check registry health status."""
