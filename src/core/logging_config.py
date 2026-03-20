@@ -2,18 +2,17 @@
 Structured logging configuration for MLOps observability.
 Implements JSON-formatted logs with correlation ID support.
 """
+import json
 import logging
 import sys
-import json
 import uuid
 from datetime import datetime
-from typing import Optional
 
 
 class CorrelationIDFilter(logging.Filter):
     """Injects a correlation ID into each log record for request tracing."""
 
-    def __init__(self, correlation_id: Optional[str] = None):
+    def __init__(self, correlation_id: str | None = None):
         super().__init__()
         self.correlation_id = correlation_id or str(uuid.uuid4())
 
@@ -48,8 +47,8 @@ class JSONFormatter(logging.Formatter):
 def setup_logger(
     name: str,
     level: str = "INFO",
-    log_file: Optional[str] = None,
-    correlation_id: Optional[str] = None,
+    log_file: str | None = None,
+    correlation_id: str | None = None,
 ) -> logging.Logger:
     """
     Configure and return a structured logger.

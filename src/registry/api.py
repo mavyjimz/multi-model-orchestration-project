@@ -3,17 +3,18 @@ FastAPI application for Model Registry - MLflow 2.11.0 Compatible
 """
 
 import logging
-from src.core.logging_config import setup_logger
-from datetime import UTC, datetime
 import time
 import uuid
+from datetime import UTC, datetime
 
 import mlflow
-from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, status, Request
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from mlflow.exceptions import MlflowException
 from mlflow.tracking import MlflowClient
 from pydantic import ValidationError
+
+from src.core.logging_config import setup_logger
 
 from .audit import log_lifecycle_event
 from .deprecation_policy import DeprecationPolicy
