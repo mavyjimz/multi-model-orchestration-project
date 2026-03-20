@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  intent-classifier:
+    build:
+      context: ../../
+      dockerfile: scripts/phase8/docker/Dockerfile
+    image: multi-model-orchestration:v1.0.2
+    container_name: mlops-intent-classifier
+    ports:
+      - "${API_PORT:-8000}:8000"
+    environment:
+      - MODEL_PATH=/app/artifacts/models/intent-classifier-sgd/1.0.2/model
+      - VECTOR_INDEX_PATH=/app/artifacts/vector_index/faiss_index_v2.0
+      - MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI:-file:/app/mlruns}
+      - PORT=8000
+      - WORKERS=${WORKERS:-2}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    volumes:
+      - ../../artifacts:/app/artifacts:ro
+      - ../../mlruns:/app/mlruns:rw
+      - ../../logs:/app/logs:rw
+    healthcheck:
+      test: ["CMD", "/app/healthcheck.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - mlops-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  mlflow:
+    image: python:3.12-slim
+    container_name: mlops-mlflow
+    ports:
+      - "${MLFLOW_PORT:-5000}:5000"
+    environment:
+      - MLFLOW_HOST=0.0.0.0
+      - MLFLOW_PORT=5000
+      - BACKEND_STORE_URI=sqlite:///mlflow.db
+      - DEFAULT_ARTIFACT_ROOT=/mlflow-artifacts
+    volumes:
+      - ../../mlruns:/mlflow-artifacts:rw
+      - mlflow-data:/mlflow
+    command: >
+      bash -c "pip install mlflow==2.11.0 &&
+               mlflow server
+               --host 0.0.0.0
+               --port 5000
+               --backend-store-uri sqlite:////mlflow/mlflow.db
+               --default-artifact-root /mlflow-artifacts"
+    networks:
+      - mlops-network
+    profiles:
+      - mlflow
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: mlops-prometheus
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - mlops-network
+    profiles:
+      - monitoring
+
+networks:
+  mlops-network:
+    driver: bridge
+
+volumes:
+  mlflow-data:
+  prometheus-data:

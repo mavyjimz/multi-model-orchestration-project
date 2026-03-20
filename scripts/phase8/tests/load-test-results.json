@@ -1,0 +1,11 @@
+{
+    "timestamp": "2026-03-20T02:42:29Z",
+    "target": "http://localhost:8000/api/v1/predict",
+    "concurrent_users": 10,
+    "total_requests": 100,
+    "successful": 0,
+    "failed": 100,
+    "duration_seconds": 1.730988251,
+    "avg_latency_seconds": .011,
+    "requests_per_second": 57.77
+}

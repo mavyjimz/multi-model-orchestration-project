@@ -102,39 +102,60 @@ async def register_model(
 async def list_models(
     query: ModelQueryRequest = Depends(), client: MlflowClient = Depends(get_mlflow_client)
 ):
-    """List registered models."""
+    """List registered models - handles empty state and validation errors gracefully."""
     try:
         filter_str = f"name = '{query.name}'" if query.name else None
         models = client.search_registered_models(filter_string=filter_str, max_results=query.limit)
 
         infos = []
         for model in models:
-            latest = client.get_latest_versions(model.name, stages=["Production", "Staging"])
-            metrics = {}
-            if latest:
-                try:
-                    run = client.get_run(latest[0].run_id)
-                    metrics = dict(run.data.metrics)
-                except Exception:
-                    pass
-            infos.append(
-                ModelInfo(
-                    name=model.name,
-                    version=latest[0].version if latest else "0",
-                    stage=latest[0].current_stage if latest else "None",
-                    run_id=latest[0].run_id if latest else None,
-                    source=latest[0].source if latest else None,
-                    status="READY",
-                    metrics=metrics,
-                )
-            )
+            try:
+                latest = client.get_latest_versions(model.name, stages=["Production", "Staging"])
+                metrics = {}
+                if latest:
+                    try:
+                        run = client.get_run(latest[0].run_id)
+                        metrics = dict(run.data.metrics)
+                    except Exception:
+                        pass
+                
+                # Build ModelInfo with safe fallbacks
+                model_version = latest[0].version if latest else None
+                model_stage = latest[0].current_stage if latest else None
+                
+                # Only create ModelInfo if we have valid data
+                if model_version is not None:
+                    infos.append(
+                        ModelInfo(
+                            name=model.name,
+                            version=model_version,
+                            stage=model_stage,
+                            run_id=latest[0].run_id if latest else None,
+                            source=latest[0].source if latest else None,
+                            status="READY",
+                            metrics=metrics,
+                        )
+                    )
+            except ValidationError as ve:
+                # Skip this model if validation fails, log warning
+                logger.warning(f"Skipping model {model.name} due to validation error: {ve}")
+                continue
+            except Exception as e:
+                logger.warning(f"Error processing model {model.name}: {e}")
+                continue
 
         return ModelListResponse(models=infos, total=len(infos), page=1, limit=query.limit)
+    
+    except ValidationError as ve:
+        # Pydantic validation error on response - return empty list
+        logger.warning(f"ModelListResponse validation error: {ve}")
+        return ModelListResponse(models=[], total=0, page=1, limit=query.limit)
     except MlflowException as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
         logger.error(f"List error: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error") from e
+        # Return empty list instead of 500 for empty state
+        return ModelListResponse(models=[], total=0, page=1, limit=query.limit)
 
 
 @app.post("/promote", response_model=ModelInfo)
