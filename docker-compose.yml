@@ -1,47 +1,52 @@
 version: '3.8'
 
 services:
-  registry-api:
+  # nginx reverse proxy
+  nginx:
+    build:
+      context: ./configs/nginx
+      dockerfile: Dockerfile.nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./certs:/etc/nginx/certs:ro
+    depends_on:
+      - app
+    networks:
+      - mlops-network
+    restart: unless-stopped
+
+  # FastAPI application
+  app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: mlops-registry
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     environment:
-      - PYTHONUNBUFFERED=1
-      - MLFLOW_TRACKING_URI=mlflow://mlflow:5000
+      - PORT=8000
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-dev-secret-key}
+      - AUDIT_TAMPER_HASH_SECRET=${AUDIT_TAMPER_HASH_SECRET:-dev-hash-secret}
     volumes:
-      - ./logs:/app/logs
-      - ./artifacts:/app/artifacts
       - ./mlruns:/app/mlruns
-    deploy:
-      resources:
-        limits:
-          memory: 2G
-          cpus: '2'
-        reservations:
-          memory: 512M
-          cpus: '0.5'
+      - ./artifacts:/app/artifacts
+      - ./logs:/app/logs
+    networks:
+      - mlops-network
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health')"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
-    restart: unless-stopped
 
-  # Optional: MLflow tracking server (uncomment if needed)
-  # mlflow:
-  #   image: ghcr.io/mlflow/mlflow:v2.11.0
-  #   container_name: mlops-mlflow
-  #   ports:
-  #     - "5000:5000"
-  #   volumes:
-  #     - ./mlruns:/mlflow
-  #   command: mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri /mlflow
-  #   deploy:
-  #     resources:
-  #       limits:
-  #         memory: 1G
-  #         cpus: '1'
+networks:
+  mlops-network:
+    driver: bridge
+
+volumes:
+  mlruns:
+  artifacts:
+  logs:

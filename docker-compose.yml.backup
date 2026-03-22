@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  registry-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mlops-registry
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - MLFLOW_TRACKING_URI=mlflow://mlflow:5000
+    volumes:
+      - ./logs:/app/logs
+      - ./artifacts:/app/artifacts
+      - ./mlruns:/app/mlruns
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '2'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  # Optional: MLflow tracking server (uncomment if needed)
+  # mlflow:
+  #   image: ghcr.io/mlflow/mlflow:v2.11.0
+  #   container_name: mlops-mlflow
+  #   ports:
+  #     - "5000:5000"
+  #   volumes:
+  #     - ./mlruns:/mlflow
+  #   command: mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri /mlflow
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 1G
+  #         cpus: '1'

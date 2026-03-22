@@ -18,3 +18,10 @@ mlflow>=2.0.0
 httpx>=0.25.0,<0.28.0
 starlette>=0.36.0
 prometheus-client==0.19.0
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+slowapi==0.1.9
+limits==3.8.0
+# Security scanning tools
+# trivy: Install via package manager or docker
+# bandit: Already included via pre-commit
