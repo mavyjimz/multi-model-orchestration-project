@@ -15,7 +15,7 @@ async def rate_limit_exception_handler(
         content={
             "detail": "Rate limit exceeded",
             "message": "Too many requests. Please try again later.",
-            "retry_after": exc.headers.get("Retry-After", "60"),
+            "retry_after": (exc.headers or {}).get("Retry-After", "60"),
         },
-        headers={"Retry-After": exc.headers.get("Retry-After", "60")},
+        headers={"Retry-After": (exc.headers or {}).get("Retry-After", "60")},
     )

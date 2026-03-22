@@ -31,7 +31,7 @@ class AuditLogger:
         entry_copy = entry.copy()
         entry_copy["prev_hash"] = prev_hash
         entry_copy["timestamp"] = entry_copy["timestamp"].isoformat()
-        content = json.dumps(entry_copy, sort_keys=True) + self.hash_secret
+        content = json.dumps(entry_copy, sort_keys=True) + (self.hash_secret or "")
         return hashlib.sha256(content.encode()).hexdigest()
 
     def _get_last_log_hash(self) -> str | None:
