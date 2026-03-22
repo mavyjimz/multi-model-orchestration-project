@@ -159,3 +159,10 @@ htmlcov/
 ruff_cache/
 bandit-report.json
 .docker/
+
+# Security: Private keys and certificates
+certs/*.key
+*.pem
+*.key
+secrets/
+.env
