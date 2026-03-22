@@ -1,11 +1,10 @@
-version: '3.8'
 
 services:
   # nginx reverse proxy
   nginx:
     build:
-      context: ./configs/nginx
-      dockerfile: Dockerfile.nginx
+      context: .
+      dockerfile: configs/nginx/Dockerfile.nginx
     ports:
       - "80:80"
       - "443:443"
