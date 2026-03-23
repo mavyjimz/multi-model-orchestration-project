@@ -1,0 +1,14 @@
+model_cards:
+  output_dir: "docs/model_cards"
+  formats: ["markdown", "json"]
+
+api_docs:
+  output_dir: "docs/api"
+  formats: ["openapi_json", "markdown"]
+
+changelog:
+  output_file: "CHANGELOG.md"
+  format: "keepachangelog"
+
+readme:
+  auto_update_stats: true

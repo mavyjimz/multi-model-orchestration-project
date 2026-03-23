@@ -1,0 +1,89 @@
+# Canary Deployment Configuration
+# Defines traffic splitting, metrics, and rollback thresholds
+
+canary_stages:
+  # Stage 1: Initial canary (1% traffic)
+  - name: "canary_initial"
+    traffic_percentage: 1
+    duration_minutes: 30
+    min_requests: 100
+    success_criteria:
+      error_rate_max: 0.01
+      latency_p99_max_ms: 200
+  
+  # Stage 2: Early canary (5% traffic)
+  - name: "canary_early"
+    traffic_percentage: 5
+    duration_minutes: 60
+    min_requests: 500
+    success_criteria:
+      error_rate_max: 0.02
+      latency_p99_max_ms: 150
+  
+  # Stage 3: Mid canary (25% traffic)
+  - name: "canary_mid"
+    traffic_percentage: 25
+    duration_minutes: 120
+    min_requests: 2000
+    success_criteria:
+      error_rate_max: 0.02
+      latency_p99_max_ms: 100
+  
+  # Stage 4: Late canary (50% traffic)
+  - name: "canary_late"
+    traffic_percentage: 50
+    duration_minutes: 240
+    min_requests: 5000
+    success_criteria:
+      error_rate_max: 0.02
+      latency_p99_max_ms: 100
+  
+  # Stage 5: Full rollout (100% traffic)
+  - name: "full_rollout"
+    traffic_percentage: 100
+    duration_minutes: 0
+    min_requests: 0
+    success_criteria:
+      error_rate_max: 0.02
+      latency_p99_max_ms: 100
+
+rollback_triggers:
+  # Automatic rollback conditions
+  error_rate_threshold: 0.05      # 5% error rate triggers rollback
+  latency_threshold_ms: 500       # P99 latency > 500ms triggers rollback
+  accuracy_drop_threshold: 0.10   # 10% accuracy drop triggers rollback
+  consecutive_failures: 3         # Number of failed checks before rollback
+
+metrics_collection:
+  enabled: true
+  sampling_rate: 1.0              # 100% of requests sampled
+  retention_days: 30
+  export_format: "json"           # Options: json, prometheus, csv
+
+models:
+  baseline:
+    name: "intent-classifier-sgd"
+    version: "v1.0.2"
+    stage: "production"
+  
+  candidate:
+    name: "intent-classifier-sgd"
+    version: "v1.0.3"
+    stage: "canary"
+
+notifications:
+  enabled: true
+  on_stage_advance: true
+  on_rollback: true
+  on_completion: true
+  channels:
+    - "log"
+    - "webhook"
+
+health_checks:
+  enabled: true
+  interval_seconds: 30
+  timeout_seconds: 10
+  endpoints:
+    - "/health"
+    - "/models"

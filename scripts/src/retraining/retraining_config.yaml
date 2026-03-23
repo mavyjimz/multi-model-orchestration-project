@@ -1,0 +1,67 @@
+# Retraining Trigger Configuration
+# Defines thresholds and conditions for automatic model retraining
+
+trigger_conditions:
+  # Data Drift Detection (PSI - Population Stability Index)
+  psi:
+    enabled: true
+    warning_threshold: 0.1    # Yellow alert - monitor closely
+    critical_threshold: 0.2   # Red alert - trigger retraining
+    check_frequency: "daily"  # How often to check (daily, weekly, hourly)
+  
+  # Concept Drift Detection (KS Test)
+  ks_test:
+    enabled: true
+    warning_threshold: 0.05   # p-value below this = warning
+    critical_threshold: 0.01  # p-value below this = trigger retraining
+    check_frequency: "daily"
+  
+  # Performance Degradation
+  performance:
+    enabled: true
+    metric: "accuracy"        # Options: accuracy, f1, precision, recall
+    baseline_window: 30       # Days to calculate baseline
+    degradation_threshold: 0.05  # 5% drop from baseline triggers retraining
+    min_samples: 100          # Minimum samples before checking
+  
+  # Feedback-Based Triggers
+  feedback:
+    enabled: true
+    avg_rating_threshold: 3.0  # Trigger if average rating drops below
+    low_rating_percentage: 0.2  # Trigger if >20% ratings are 1-2 stars
+    min_feedback_count: 50     # Minimum feedback records before checking
+
+retraining_pipeline:
+  # Data requirements
+  min_new_samples: 500        # Minimum new samples to justify retraining
+  max_age_days: 90            # Maximum age of training data
+  
+  # Resource constraints
+  max_training_time_hours: 4  # Timeout for training job
+  gpu_required: false         # Set true if GPU needed
+  
+  # Validation requirements
+  min_validation_accuracy: 0.65  # New model must exceed this
+  improvement_threshold: 0.02    # Must improve by at least 2%
+  
+  # Deployment strategy
+  deployment_strategy: "canary"  # Options: canary, blue-green, direct
+  canary_traffic_percentage: 10  # Initial traffic for canary
+
+notifications:
+  enabled: true
+  channels:
+    - type: "log"           # Always log to file
+    - type: "email"         # Optional: email alerts
+    - type: "slack"         # Optional: Slack webhook
+    - type: "webhook"       # Optional: custom webhook
+  
+  recipients:
+    email: "mlops-team@example.com"
+    slack_webhook: "${SLACK_WEBHOOK_URL}"
+    custom_webhook: "${CUSTOM_WEBHOOK_URL}"
+
+retention:
+  trigger_history_days: 365    # How long to keep trigger history
+  max_retraining_attempts: 3   # Max retries before manual intervention
+  cooldown_period_hours: 24    # Minimum time between retraining triggers

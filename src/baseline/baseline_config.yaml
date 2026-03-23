@@ -1,0 +1,65 @@
+# Performance Baseline Configuration
+# Defines rolling window parameters and update thresholds
+
+rolling_windows:
+  # Short-term window (daily updates)
+  short_term:
+    window_days: 7
+    min_samples: 100
+    update_frequency: "daily"
+    metrics:
+      - accuracy
+      - latency_p99_ms
+      - error_rate
+  
+  # Medium-term window (weekly updates)
+  medium_term:
+    window_days: 30
+    min_samples: 500
+    update_frequency: "weekly"
+    metrics:
+      - accuracy
+      - latency_p99_ms
+      - error_rate
+      - f1_score
+  
+  # Long-term window (monthly updates)
+  long_term:
+    window_days: 90
+    min_samples: 2000
+    update_frequency: "monthly"
+    metrics:
+      - accuracy
+      - latency_p99_ms
+      - error_rate
+      - f1_score
+      - precision
+      - recall
+
+baseline_update_rules:
+  # When to update the baseline
+  accuracy_improvement_threshold: 0.03  # 3% improvement triggers update
+  latency_improvement_threshold: 10     # 10ms improvement triggers update
+  staleness_days: 60                    # Force update if baseline older than 60 days
+  min_data_points: 1000                 # Minimum samples before considering update
+
+trend_analysis:
+  enabled: true
+  forecast_days: 14                     # Forecast performance for next 14 days
+  alert_on_degradation: true
+  degradation_threshold: 0.05           # Alert if 5% degradation trend detected
+
+alerting:
+  enabled: true
+  channels:
+    - "log"
+    - "webhook"
+  thresholds:
+    accuracy_drop: 0.05
+    latency_increase_ms: 50
+    error_rate_increase: 0.02
+
+storage:
+  retention_days: 365
+  compression: true
+  export_format: "json"
