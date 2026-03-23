@@ -212,7 +212,7 @@ class TrendAnalyzer:
 
         for metric, forecast in forecasts.items():
             if forecast:
-                summary["forecasts"][metric] = asdict(forecast)
+                summary["forecasts"][metric] = asdict(forecast)  # type: ignore[index]
 
                 if forecast.trend_direction == "degrading":
                     degrading_count += 1
