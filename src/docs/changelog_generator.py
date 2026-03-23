@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 """Changelog Generator"""
 
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+
 
 class ChangelogGenerator:
     def __init__(self):
         self.output_file = Path("CHANGELOG.md")
-    
+
     def generate(self) -> str:
         content = f"""# Changelog
 
-## [v1.0.2] - {datetime.utcnow().strftime('%Y-%m-%d')}
+## [v1.0.2] - {datetime.utcnow().strftime("%Y-%m-%d")}
 
 ### Added
 - Phase 11 documentation auto-generation
@@ -23,10 +24,11 @@ class ChangelogGenerator:
 - Enhanced monitoring capabilities
 
 """
-        with open(self.output_file, 'w') as f:
+        with open(self.output_file, "w") as f:
             f.write(content)
-        
+
         return str(self.output_file)
+
 
 if __name__ == "__main__":
     gen = ChangelogGenerator()

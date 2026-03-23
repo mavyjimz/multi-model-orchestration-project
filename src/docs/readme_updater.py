@@ -1,26 +1,22 @@
 #!/usr/bin/env python3
 """README Auto-Updater"""
-
+from datetime import UTC, datetime
 from pathlib import Path
-from datetime import datetime
+
 
 class ReadmeUpdater:
     def __init__(self):
         self.readme_file = Path("README.md")
-    
+
     def update(self) -> str:
-        content = f"""# Multi-Model Orchestration System
+        timestamp = datetime.now(UTC).strftime("%Y-%m-%d")
+        content = "# Multi-Model Orchestration System\n\n"
+        content += f"**Last Updated**: {timestamp}\n"
+        with open(self.readme_file, "w") as f:
+            f.write(content)
+        return str(self.readme_file)
 
-**Last Updated**: {datetime.utcnow().strftime('%Y-%m-%d')}
-
-## Status
-
-- Phase 1-10: COMPLETE
-- Phase 11: COMPLETE
-- Phase 12: PENDING
-
-## Quick Start
-
-```bash
-pip install -r requirements.txt
-python src/registry/api.py
+if __name__ == "__main__":
+    updater = ReadmeUpdater()
+    path = updater.update()
+    print(f"README updated: {path}")

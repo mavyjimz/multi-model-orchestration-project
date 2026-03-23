@@ -16,6 +16,7 @@ import yaml
 
 class TriggerSeverity(Enum):
     """Severity levels for retraining triggers"""
+
     NORMAL = "normal"
     WARNING = "warning"
     CRITICAL = "critical"
@@ -23,6 +24,7 @@ class TriggerSeverity(Enum):
 
 class TriggerType(Enum):
     """Types of retraining triggers"""
+
     PSI_DRIFT = "psi_drift"
     KS_DRIFT = "ks_drift"
     PERFORMANCE_DEGRADATION = "performance_degradation"
@@ -34,6 +36,7 @@ class TriggerType(Enum):
 @dataclass
 class TriggerEvent:
     """Represents a retraining trigger event"""
+
     trigger_id: str
     timestamp: str
     trigger_type: str
@@ -87,10 +90,7 @@ class RetrainingTriggerEngine:
         return f"trigger-{trigger_type}-{hash_suffix}"
 
     def check_psi_drift(
-        self,
-        psi_score: float,
-        model_name: str,
-        model_version: str
+        self, psi_score: float, model_name: str, model_version: str
     ) -> TriggerEvent | None:
         """
         Check PSI drift and trigger if threshold exceeded
@@ -126,25 +126,26 @@ class RetrainingTriggerEngine:
             model_version=model_version,
             metric_name="psi_score",
             current_value=psi_score,
-            threshold_value=config["critical_threshold"] if severity == TriggerSeverity.CRITICAL else config["warning_threshold"],
+            threshold_value=config["critical_threshold"]
+            if severity == TriggerSeverity.CRITICAL
+            else config["warning_threshold"],
             baseline_value=0.0,
             message=f"PSI drift detected: {psi_score:.4f} (threshold: {config['critical_threshold']})",
-            recommended_action="Initiate model retraining with recent data" if severity == TriggerSeverity.CRITICAL else "Monitor closely, prepare retraining pipeline",
+            recommended_action="Initiate model retraining with recent data"
+            if severity == TriggerSeverity.CRITICAL
+            else "Monitor closely, prepare retraining pipeline",
             metadata={
                 "psi_score": psi_score,
                 "warning_threshold": config["warning_threshold"],
-                "critical_threshold": config["critical_threshold"]
-            }
+                "critical_threshold": config["critical_threshold"],
+            },
         )
 
         self._record_trigger(trigger)
         return trigger
 
     def check_ks_drift(
-        self,
-        ks_pvalue: float,
-        model_name: str,
-        model_version: str
+        self, ks_pvalue: float, model_name: str, model_version: str
     ) -> TriggerEvent | None:
         """
         Check KS test drift and trigger if threshold exceeded
@@ -180,26 +181,26 @@ class RetrainingTriggerEngine:
             model_version=model_version,
             metric_name="ks_pvalue",
             current_value=ks_pvalue,
-            threshold_value=config["critical_threshold"] if severity == TriggerSeverity.CRITICAL else config["warning_threshold"],
+            threshold_value=config["critical_threshold"]
+            if severity == TriggerSeverity.CRITICAL
+            else config["warning_threshold"],
             baseline_value=1.0,
             message=f"KS drift detected: p-value={ks_pvalue:.4f} (threshold: {config['critical_threshold']})",
-            recommended_action="Initiate model retraining with recent data" if severity == TriggerSeverity.CRITICAL else "Monitor closely, prepare retraining pipeline",
+            recommended_action="Initiate model retraining with recent data"
+            if severity == TriggerSeverity.CRITICAL
+            else "Monitor closely, prepare retraining pipeline",
             metadata={
                 "ks_pvalue": ks_pvalue,
                 "warning_threshold": config["warning_threshold"],
-                "critical_threshold": config["critical_threshold"]
-            }
+                "critical_threshold": config["critical_threshold"],
+            },
         )
 
         self._record_trigger(trigger)
         return trigger
 
     def check_performance_degradation(
-        self,
-        current_accuracy: float,
-        baseline_accuracy: float,
-        model_name: str,
-        model_version: str
+        self, current_accuracy: float, baseline_accuracy: float, model_name: str, model_version: str
     ) -> TriggerEvent | None:
         """
         Check performance degradation and trigger if threshold exceeded
@@ -223,7 +224,11 @@ class RetrainingTriggerEngine:
         if degradation <= config["degradation_threshold"]:
             return None  # No significant degradation
 
-        severity = TriggerSeverity.CRITICAL if degradation > config["degradation_threshold"] * 2 else TriggerSeverity.WARNING
+        severity = (
+            TriggerSeverity.CRITICAL
+            if degradation > config["degradation_threshold"] * 2
+            else TriggerSeverity.WARNING
+        )
 
         trigger = TriggerEvent(
             trigger_id=self._generate_trigger_id("perf", model_name),
@@ -242,8 +247,8 @@ class RetrainingTriggerEngine:
                 "current_accuracy": current_accuracy,
                 "baseline_accuracy": baseline_accuracy,
                 "degradation": degradation,
-                "degradation_threshold": config["degradation_threshold"]
-            }
+                "degradation_threshold": config["degradation_threshold"],
+            },
         )
 
         self._record_trigger(trigger)
@@ -255,7 +260,7 @@ class RetrainingTriggerEngine:
         low_rating_percentage: float,
         feedback_count: int,
         model_name: str,
-        model_version: str
+        model_version: str,
     ) -> TriggerEvent | None:
         """
         Check feedback ratings and trigger if thresholds exceeded
@@ -310,8 +315,8 @@ class RetrainingTriggerEngine:
                 "avg_rating": avg_rating,
                 "low_rating_percentage": low_rating_percentage,
                 "feedback_count": feedback_count,
-                "thresholds": config
-            }
+                "thresholds": config,
+            },
         )
 
         self._record_trigger(trigger)
@@ -323,14 +328,11 @@ class RetrainingTriggerEngine:
 
         # Save to file
         filename = self.history_dir / f"{trigger.trigger_id}.json"
-        with open(filename, 'w') as f:
+        with open(filename, "w") as f:
             json.dump(asdict(trigger), f, indent=2)
 
     def get_trigger_history(
-        self,
-        model_name: str | None = None,
-        severity: str | None = None,
-        limit: int = 100
+        self, model_name: str | None = None, severity: str | None = None, limit: int = 100
     ) -> list[dict[str, Any]]:
         """Retrieve trigger history with optional filtering"""
         triggers = self.trigger_history
@@ -358,13 +360,13 @@ class RetrainingTriggerEngine:
             "by_severity": {
                 "critical": len([t for t in self.trigger_history if t.severity == "critical"]),
                 "warning": len([t for t in self.trigger_history if t.severity == "warning"]),
-                "normal": len([t for t in self.trigger_history if t.severity == "normal"])
+                "normal": len([t for t in self.trigger_history if t.severity == "normal"]),
             },
             "by_type": {
                 t_type: len([t for t in self.trigger_history if t.trigger_type == t_type])
                 for t_type in {t.trigger_type for t in self.trigger_history}
             },
-            "recent_triggers": self.get_trigger_history(limit=10)
+            "recent_triggers": self.get_trigger_history(limit=10),
         }
 
 
@@ -377,9 +379,7 @@ if __name__ == "__main__":
 
     # Simulate PSI drift
     trigger = engine.check_psi_drift(
-        psi_score=0.25,
-        model_name="intent-classifier-sgd",
-        model_version="v1.0.2"
+        psi_score=0.25, model_name="intent-classifier-sgd", model_version="v1.0.2"
     )
 
     if trigger:

@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 """CI Performance Metrics"""
-import json
-from pathlib import Path
 from datetime import datetime
 
 print("CI Metrics Collector")

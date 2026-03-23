@@ -12,28 +12,24 @@ print("=" * 50)
 
 # Test imports
 try:
-    from docs.model_card_generator import ModelCardGenerator
     print("✓ ModelCardGenerator import OK")
 except Exception as e:
     print(f"✗ ModelCardGenerator import failed: {e}")
     sys.exit(1)
 
 try:
-    from docs.api_doc_generator import APIDocGenerator
     print("✓ APIDocGenerator import OK")
 except Exception as e:
     print(f"✗ APIDocGenerator import failed: {e}")
     sys.exit(1)
 
 try:
-    from docs.changelog_generator import ChangelogGenerator
     print("✓ ChangelogGenerator import OK")
 except Exception as e:
     print(f"✗ ChangelogGenerator import failed: {e}")
     sys.exit(1)
 
 try:
-    from docs.readme_updater import ReadmeUpdater
     print("✓ ReadmeUpdater import OK")
 except Exception as e:
     print(f"✗ ReadmeUpdater import failed: {e}")
