@@ -34,8 +34,8 @@ class ModelCardGenerator:
             f.write(f"# Model Card: {model_name}\n\n")
             f.write(f"**Version**: {model_version}\n\n")
             f.write("## Performance\n\n")
-            f.write(f"- Accuracy: {card['performance']['accuracy']}\n")
-            f.write(f"- P95 Latency: {card['performance']['latency_p95_ms']}ms\n")
+            f.write(f"- Accuracy: {card['performance']['accuracy']}\n")  # type: ignore[index]
+            f.write(f"- P95 Latency: {card['performance']['latency_p95_ms']}ms\n")  # type: ignore[index]
 
         return card
 

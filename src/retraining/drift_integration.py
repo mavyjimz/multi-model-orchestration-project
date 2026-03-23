@@ -114,9 +114,7 @@ if __name__ == "__main__":
 
     triggered, trigger = integration.check_and_trigger()
 
-    if triggered:
+    if triggered and trigger:
         print("\n[TRIGGER] Retraining triggered!")
         print(f"Message: {trigger.message}")
         print(f"Action: {trigger.recommended_action}")
-    else:
-        print("\n[OK] No retraining needed")

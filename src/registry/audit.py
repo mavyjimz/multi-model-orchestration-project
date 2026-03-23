@@ -6,7 +6,7 @@ Logs to: logs/audit/deprecation.log (JSON structured)
 
 import json
 import logging
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -28,7 +28,7 @@ if not audit_logger.handlers:
 
         def format(self, record: logging.LogRecord) -> str:
             log_entry = {
-                "timestamp": datetime.now(UTC).isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "level": record.levelname,
                 "action": getattr(record, "action", None),
                 "model_name": getattr(record, "model_name", None),
