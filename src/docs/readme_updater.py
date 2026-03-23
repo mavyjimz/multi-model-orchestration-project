@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """README Auto-Updater"""
+
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -15,6 +16,7 @@ class ReadmeUpdater:
         with open(self.readme_file, "w") as f:
             f.write(content)
         return str(self.readme_file)
+
 
 if __name__ == "__main__":
     updater = ReadmeUpdater()
