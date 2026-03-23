@@ -5,7 +5,7 @@ FastAPI application for Model Registry - MLflow 2.11.0 Compatible
 import logging
 import time
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 
 import mlflow
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Request, status
@@ -89,7 +89,7 @@ async def health_check() -> RegistryHealthResponse:
     return RegistryHealthResponse(
         status="healthy" if mlflow_ok else "degraded",
         mlflow_connected=mlflow_ok,
-        timestamp=datetime.now(timezone.utc).isoformat(),
+        timestamp=datetime.now(datetime.UTC).isoformat(),
         service="model-registry",
     )
 
@@ -113,7 +113,7 @@ async def register_model(
             name=request.name,
             version=mv.version,
             key="registered_date",
-            value=datetime.now(timezone.utc).isoformat(),
+            value=datetime.now(datetime.UTC).isoformat(),
         )
 
         log_lifecycle_event(
@@ -303,7 +303,7 @@ async def deprecate_model(
             name=request.name,
             version=request.version,
             key="deprecation_date",
-            value=datetime.now(timezone.utc).isoformat(),
+            value=datetime.now(datetime.UTC).isoformat(),
         )
 
         if request.reason:
@@ -374,7 +374,7 @@ async def retire_model(
             name=request.name,
             version=request.version,
             key="retired_date",
-            value=datetime.now(timezone.utc).isoformat(),
+            value=datetime.now(datetime.UTC).isoformat(),
         )
 
         client.set_model_version_tag(
