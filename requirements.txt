@@ -25,3 +25,4 @@ limits==3.8.0
 # Security scanning tools
 # trivy: Install via package manager or docker
 # bandit: Already included via pre-commit
+pytest-xdist==3.5.0
